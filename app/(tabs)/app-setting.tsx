@@ -15,7 +15,7 @@ export default function AppSetting() {
   const router = useRouter();
   const { color, updateColor, image, updateImages, isDark, setTheme, theme, appColors, langues, updateLangue } = useApp();
   const [all, setAll] = useState({
-    color: false,
+    color: true,
     image: false,
   });
   const [language, setLanguage] = useState(getTranslation(langues?.appLng || "mg"));
@@ -33,7 +33,7 @@ export default function AppSetting() {
         bg: selectedColor?.bg || '',
         text: selectedColor?.text || '',
         borderColor: adjustColor(selectedColor?.bg || '', isDark ? -20 : 20) || selectedColor?.borderColor || '',
-        colorIndex: index + 1,
+        colorIndex: index,
       },
       color.id,
     );

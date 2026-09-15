@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   ReactNode,
   useCallback,
@@ -159,23 +159,22 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     }))
   }, [isDark]);
 
-
   const getColors = useCallback(async () => {
     await colorDB.getColors()
       .then((colorsdb) => {
+        console.log(colorsdb);
+
         if (colorsdb.length > 0) {
           const c = colorsdb[0];
-          const index = (c.colorIndex || 2) - 1;
-          const appColors = getAppColors();
           setColor({
             ...c,
-            bg: appColors[index].bg,
-            text: appColors[index].text,
-            borderColor: appColors[index].borderColor,
-            colorIndex: index,
+            bg: c.bg,
+            text: c.text,
+            borderColor: c.borderColor,
+            colorIndex: c.colorIndex,
           });
         } else {
-          colorDB.createColor({ colorIndex: 2 }).then(() => {
+          colorDB.createColor({ ...appColors[0], colorIndex: 1 }).then(() => {
             getColors();
           });
         }
