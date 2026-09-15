@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Ny Baiboly by Kennyh",
+    "slug": "Ny_Baiboly_by_Kennyh",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/baiboly2.png",
+    "scheme": "nybaibolybykennyh",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundImage": "./assets/images/baiboly2.png",
+        "monochromeImage": "./assets/images/baiboly2.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kennyh2.x0.NyBaibolybyKennyh"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/icon5.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon5.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#f0f0f0",
+          "dark": {
+            "backgroundColor": "#151718"
+          }
+        }
+      ],
+      "expo-sqlite"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
