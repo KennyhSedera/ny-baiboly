@@ -27,3 +27,16 @@ export const capitalizeText = (text: string) => {
 export const getLanguage = (lng: LangType) => {
   return lng === "fr" ? fr : lng === "en" ? en : mg
 }
+
+export function parseVerse(value: string): [number | undefined, number | undefined] {
+  if (!value.trim()) {
+    return [undefined, undefined];
+  }
+
+  const parts = value.split('-').map((v) => v.trim());
+
+  const start = parts[0] ? Number(parts[0]) : undefined;
+  const end = parts[1] ? Number(parts[1]) : undefined;
+
+  return [start, end];
+}

@@ -1,21 +1,24 @@
 import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { getTranslation } from '@/constants/text';
+import { getInfo, getTranslation } from '@/constants/text';
 import { useApp } from '@/contexts/app.context';
 import { verseRandom } from '@/types/bible';
-import { getOneVerse, info } from '@/utils/bible.util';
+import { getBookById, getOneVerse, info } from '@/utils/bible.util';
 import { images } from '@/utils/image.util';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { parseVerse } from '@/utils/text.util';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { default as MaterialCommunityIcons, default as MaterialIcons } from '@expo/vector-icons/MaterialCommunityIcons';
+import { default as MaterialIcons } from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Image, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function BookIndex() {
-  const { color, image, isDark, books, verses, langues } = useApp();
+  const { color, image, isDark, books, verses, langues, lastReads, removeLastRead, newTestament, oldTestament } = useApp();
   const router = useRouter();
   const [verse, setVerse] = React.useState<verseRandom>();
   const [language, setLanguage] = useState(getTranslation(langues?.appLng || "mg"));
+
+  const l = getTranslation(langues?.bibleLng || "mg");
+  const infoText = getInfo(langues?.appLng || "mg");
 
   const get = useCallback(
     () => {
@@ -31,6 +34,9 @@ export default function BookIndex() {
   useEffect(() => {
     get();
   }, [langues, verses, books]);
+
+  const old = `( ${getBookById(oldTestament[0]?.book_number, oldTestament)?.long_name} - ${getBookById(oldTestament[oldTestament.length - 1]?.book_number, oldTestament)?.long_name} )`;
+  const newt = `( ${getBookById(newTestament[0]?.book_number, newTestament)?.long_name} - ${getBookById(newTestament[newTestament.length - 1]?.book_number, newTestament)?.long_name} )`;
 
   const renderHeader = () => {
     return (
@@ -67,27 +73,77 @@ export default function BookIndex() {
       headerImage={renderHeader()}
       bg={color?.bg}
     >
-      <View style={[styles.booksContainer, { justifyContent: 'space-between' }]}>
-        <Pressable onPress={() => router.push("/book")} style={[styles.bookCard, { borderColor: color?.borderColor, backgroundColor: `${color?.bg}96`, alignItems: "center", width: '48%' }]}>
-          <FontAwesome5 name="bible" size={60} color={color?.text} />
-          <Text style={[styles.bookTitle, { color: color?.text, marginTop: 8 }]}>
-            {language.bibleText}
+      <View style={[styles.flexRow, { justifyContent: 'center', width: '100%' }]}>
+        <Pressable
+          style={[styles.bookCard, {
+            backgroundColor: isDark ? "#3d3418" : "#fff4d6",
+            borderColor: 'transparent',
+            alignItems: "flex-start",
+            gap: 3,
+            paddingHorizontal: 20,
+            paddingVertical: 15,
+            borderRadius: 20
+          }]}
+        >
+          <Text style={[styles.bookTitle, { color: isDark ? "#f5c451" : "#8a5a00", fontSize: 40 }]}>
+            {oldTestament.length}
+            <Text style={{ fontSize: 16, fontWeight: '400', color: isDark ? "#d9b876" : "#a67c2e" }}>{"  "}{l.bookText}</Text>
           </Text>
+          <Text style={[styles.bookTitle, { color: isDark ? "#f0d9a0" : "#6b5218" }]}>{l.oldTest}</Text>
+          <Text style={[styles.bookTitle, { color: isDark ? "#b8a476" : "#a8925f", fontSize: 12 }]}>{old}</Text>
         </Pressable>
-        <Pressable onPress={() => router.push("/app-setting")} style={[styles.bookCard, { borderColor: color?.borderColor, backgroundColor: `${color?.bg}96`, alignItems: "center", width: '48%' }]}>
-          <FontAwesome5 name="cog" size={60} color={color?.text} />
-          <Text style={[styles.bookTitle, { color: color?.text, marginTop: 8 }]}>
-            {language.settingText}
+
+        <Pressable
+          style={[styles.bookCard, {
+            backgroundColor: isDark ? "#2a1a3d" : "#f2e6fa",
+            borderColor: 'transparent',
+            alignItems: "flex-start",
+            gap: 3,
+            paddingHorizontal: 20,
+            paddingVertical: 15,
+            borderRadius: 20
+          }]}
+        >
+          <Text style={[styles.bookTitle, { color: isDark ? "#c084fc" : "#7c3aed", fontSize: 40 }]}>
+            {newTestament.length}
+            <Text style={{ fontSize: 16, fontWeight: '400', color: isDark ? "#d8b4fe" : "#9061c7" }}>{"  "}{l.bookText}</Text>
           </Text>
-        </Pressable>
-        <Pressable onPress={() => router.push("/my-note")} style={[styles.bookCard, { borderColor: color?.borderColor, backgroundColor: `${color?.bg}96`, alignItems: "center", width: '48%' }]}>
-          <MaterialCommunityIcons name="clipboard-edit-outline" size={60} color={color?.text} />
-          <Text style={[styles.bookTitle, { color: color?.text, marginTop: 8 }]}>
-            {language.noteText}
-          </Text>
+          <Text style={[styles.bookTitle, { color: isDark ? "#e9d5ff" : "#5b21b6" }]}>{l.newTest}</Text>
+          <Text style={[styles.bookTitle, { color: isDark ? "#a78bbf" : "#a78bbf", fontSize: 12 }]}>{newt}</Text>
         </Pressable>
       </View>
-    </ParallaxScrollView>
+
+      <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 30 }]}>
+        <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%" }]}>
+          <Text style={[styles.modalText, { color: color?.text }]}>{infoText.lastReadText}</Text>
+          <Ionicons name='reader-outline' size={22} color={color?.text} />
+        </View>
+        <View style={[styles.flexRow, { flexWrap: "wrap" }]}>
+          {lastReads.slice(0, 8).map((last, i) => {
+            const book = getBookById(last.book_number, books)?.short_name;
+            const text = last.verse ? `${book}. ${last.chapter} : ${last.verse}` : `${book}. ${last.chapter}`
+            const start = parseVerse(last.verse as string)[0];
+            const end = parseVerse(last.verse as string)[1];
+
+            const params = { bookId: last.book_number, chapterId: last.chapter, startVerse: start, endVerse: end }
+
+            return (
+              <TouchableOpacity
+                key={i}
+                onPress={() => router.push({ pathname: '/(baiboly)/book-reading', params })}
+                onLongPress={() => removeLastRead(last.id as number)}
+                style={[{ backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 }]}
+              >
+                <Text style={[styles.bookTitle, { color: color?.text, }]}>
+                  {text}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </View>
+      </View>
+
+    </ParallaxScrollView >
   )
 }
 
@@ -134,4 +190,18 @@ export const styles = StyleSheet.create({
   },
   buttonFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 2, padding: 8, borderRadius: 8, borderColor: '#ccc', marginVertical: 2, borderWidth: 1, borderStyle: "dashed" },
   buttonFooterText: { fontWeight: 'bold', fontSize: 16, },
+  cardColor: { width: '48%', height: 150, borderRadius: 20, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 10, position: 'relative' },
+
+  contact: { alignItems: "center", justifyContent: "center", width: "32%", borderRadius: 10, padding: 10 },
+
+  infoTitle: { fontSize: 16, fontWeight: "700", marginBottom: 5 },
+  infoText: { fontSize: 10, lineHeight: 20 },
+  version: { textAlign: "center", marginTop: 35, lineHeight: 20 },
+  infoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", alignSelf: "stretch", },
+  infoLabel: { fontSize: 15, fontWeight: "600", },
+  infoImage: { width: 52, height: 52, borderRadius: 15, objectFit: "cover" },
+  infoApp: { fontSize: 15, fontWeight: "700", textAlign: "center", marginTop: 10, textTransform: "uppercase" },
+  infoAuthor: { fontSize: 13, textAlign: "center", },
+  infoCopyright: { fontSize: 12, textAlign: "center", },
+  infoSlogan: { fontSize: 13, textAlign: "center", marginTop: 4, fontStyle: "italic", },
 })

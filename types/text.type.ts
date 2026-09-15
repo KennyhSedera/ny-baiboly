@@ -5,6 +5,8 @@ export type Theme = "dark" | "light" | "system";
 export type ThemeIcon = "moon" | "sunny" | "phone-portrait";
 
 export interface Translation {
+  infoText: string;
+
   theme: {
     title: string;
     data: {

@@ -1,8 +1,9 @@
 import { Language, Translation } from "@/types/text.type";
 
 export const mg: Translation = {
+  infoText: 'Mombamomba',
   theme: {
-    title: "Lohahevitra",
+    title: "Hazavana",
     data: [
       {
         value: "dark",
@@ -165,6 +166,7 @@ export const mg: Translation = {
 };
 
 export const fr: Translation = {
+  infoText: 'Info',
   theme: {
     title: "Thème",
     data: [
@@ -329,6 +331,7 @@ export const fr: Translation = {
 };
 
 export const en: Translation = {
+  infoText: 'Info',
   theme: {
     title: "Theme",
     data: [
@@ -499,4 +502,56 @@ export const translations = {
 
 export function getTranslation(language: Language): Translation {
   return translations[language];
+}
+
+export function getInfo(language: Language) {
+  switch (language) {
+    case 'mg':
+      return {
+        title: 'Momba ny rindranasa',
+        appName: 'NY BAIBOLY MALAGASY, 1865',
+        description:
+          'Rindranasa natao hamakiana sy hianarana ny Baiboly.',
+        version: 'Dika',
+        developer: 'Mpamorona',
+        language: 'Fiteny',
+        offline: 'Azo ampiasaina tsy misy Internet.',
+        copyright: 'Zo rehetra voatokana.',
+        contactText: 'Fifandraisana',
+        lastReadText: 'Novakiana farany',
+        lastSearchText: 'Notadiavina farany',
+      };
+
+    case 'fr':
+      return {
+        title: "A propos de l’application",
+        appName: 'NY BAIBOLY MALAGASY, 1865',
+        description:
+          'Application conçue pour lire et étudier la Bible.',
+        version: 'Version',
+        developer: 'Développeur',
+        language: 'Langue',
+        offline: 'Utilisable sans connexion Internet.',
+        copyright: 'Tous droits réservés.',
+        lastReadText: 'Dernières lectures',
+        lastSearchText: 'Dernières recherches',
+        contactText: 'Contact'
+      };
+
+    case 'en':
+      return {
+        title: 'About the application',
+        appName: 'NY BAIBOLY MALAGASY, 1865',
+        description:
+          'An application designed for reading and studying the Bible.',
+        version: 'Version',
+        developer: 'Developer',
+        language: 'Language',
+        offline: 'Available for use without an Internet connection.',
+        copyright: 'All rights reserved.',
+        lastReadText: 'Recently read',
+        lastSearchText: 'Recent searches',
+        contactText: 'Contact'
+      };
+  }
 }

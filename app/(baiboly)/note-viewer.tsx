@@ -69,6 +69,7 @@ const NoteViewer = () => {
       <ScrollView
         style={styles.container}
         contentContainerStyle={[styles.scrollContent, {}]}
+        showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.bookTitle, { color: color?.text, marginBottom: 20, fontSize: 24, textAlign: 'left' }]}>{data?.title || 'Pas de titre'}</Text>
         <SegmentsViewer content={data?.content as string} />

@@ -17,7 +17,7 @@ interface Selected {
 const BookChapterVerse = () => {
   const { bookId, chapterId } = useLocalSearchParams();
   const router = useRouter();
-  const { isDark, books, verses, langues } = useApp();
+  const { isDark, books, verses, langues, addNewLastRead } = useApp();
 
   const langText = getTranslation(langues?.bibleLng as 'mg')
 
@@ -69,7 +69,8 @@ const BookChapterVerse = () => {
   };
 
   const hanleRead = () => {
-    router.push({ pathname: '/book-reading', params: { bookId, chapterId, startVerse: selected.start, endVerse: selected.end } })
+    router.push({ pathname: '/book-reading', params: { bookId, chapterId, startVerse: selected.start, endVerse: selected.end } });
+    addNewLastRead({ book_number: Number(bookId), chapter: Number(chapterId), verse: selected.end ? `${selected.start} - ${selected.end}` : selected.start ? `${selected.start}` : "" });
   }
 
   const textTitle = selected.start !== undefined ? `${book?.short_name}. ${chapterId} : ${selected.start} ${selected.end ? `- ${selected.end}` : ''}` : `${book?.long_name} ${chapterId}`
@@ -97,6 +98,7 @@ const BookChapterVerse = () => {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={[styles.booksContainer, styles.scrollContent,]}
+        showsVerticalScrollIndicator={false}
       >
         {verseNumbers?.map((verse) => {
           const selectedVerse = isSelected(verse);

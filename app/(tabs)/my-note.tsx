@@ -89,16 +89,13 @@ export default function MyNote() {
   return (
     <ThemedView style={{ flex: 1, position: 'relative' }}>
       <View style={[styles.header, { backgroundColor: color?.bg }]}>
-        <Pressable onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={26} color={color?.text} />
-        </Pressable>
         <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, }]}>{t.noteText}</Text>
         <Ionicons name="search" size={24} color={color?.text} />
       </View>
-      <Pressable onPress={() => router.push('/note-input')} style={[styles.buttonFlotting, { backgroundColor: color?.bg, bottom: 100 }]}>
-        <Ionicons name='add' size={32} color={color?.text} />
+      <Pressable onPress={() => router.push('/note-input')} style={[styles.buttonFlotting, { backgroundColor: color?.text, bottom: 85, right: 10 }]}>
+        <Ionicons name='add' size={32} color={color?.bg} />
       </Pressable>
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1, gap: 10 }}>
             {leftColumn.map((n, i) => renderCard(n, i * 2))}

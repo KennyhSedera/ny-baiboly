@@ -71,6 +71,24 @@ async function openAndInit(): Promise<SQLite.SQLiteDatabase> {
       bibleLng TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS last_read (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      book_number INTEGER NOT NULL,
+      chapter INTEGER,
+      verse TEXT,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS last_search (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      book_number INTEGER NOT NULL,
+      chapter INTEGER,
+      verse INTEGER,
+      text Text,
+      search_at TEXT NOT NULL
+    );
+
   `);
 
   return database;

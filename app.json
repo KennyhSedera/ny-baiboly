@@ -20,19 +20,20 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/baiboly4.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon.png",
+          "image": "./assets/images/baiboly4.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#f0f0f0",
+          "backgroundColor": "#ffffff",
           "dark": {
-            "backgroundColor": "#151718"
+          "image": "./assets/images/baiboly3.png",
+            "backgroundColor": "#000000"
           }
         }
       ],

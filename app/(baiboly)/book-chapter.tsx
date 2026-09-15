@@ -44,7 +44,7 @@ const ScreenBookChapter = () => {
           <Text style={[styles.headerTitle, { color: "#FFF" }]}>{book?.long_name}</Text>
         </View>
       </View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.booksContainer, styles.scrollContent]} >
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.booksContainer, styles.scrollContent]} showsVerticalScrollIndicator={false} >
         {chapters?.map((chapter) => (
           <Pressable
             key={chapter}

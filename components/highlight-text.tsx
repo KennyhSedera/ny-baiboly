@@ -1,4 +1,3 @@
-import React from 'react';
 import { Text, TextStyle } from 'react-native';
 import { ThemedText } from './themed-text';
 
@@ -19,7 +18,7 @@ export function HighlightText({ text, highlight, textStyle, match }: HighlightTe
   const parts = text.split(regex);
 
   return (
-    <ThemedText style={textStyle}>
+    <ThemedText numberOfLines={2} style={textStyle}>
       {parts.map((part, i) =>
         part.toLowerCase() === highlight.trim().toLowerCase() ? (
           <Text key={i} style={[styles.match, match && { color: match.color, backgroundColor: match.bg }]}>{part}</Text>

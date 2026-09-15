@@ -35,9 +35,7 @@ const ScreenBooks = () => {
 
       <View style={[styles.header, { flexDirection: "column", backgroundColor: color?.bg, paddingBottom: 16 },]}>
         <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%", paddingVertical: 8, marginBottom: 8 }]}>
-          <Pressable onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={26} color={color?.text} />
-          </Pressable>
+
           <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, }]}>{info.description}</Text>
           <Ionicons name="information-circle" size={24} color={color?.text} />
         </View>

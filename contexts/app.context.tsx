@@ -12,6 +12,8 @@ import * as colorDB from '@/api/colors.repository';
 import { getDB } from '@/api/database';
 import * as imagesDB from '@/api/image.repository';
 import { createLangue, getLangues, LangueType, updateLangue, UpdateLangueType } from '@/api/langues.repository';
+import * as lastReadDB from '@/api/last.read.repository';
+import * as lastSearchDB from '@/api/last.search.repository';
 import * as notesDB from '@/api/notes.repository';
 import * as settingDB from '@/api/setting.read.repository';
 import { Setting } from '@/api/setting.read.repository';
@@ -48,11 +50,15 @@ interface AppContextValue {
   newTestament: bookBible[];
   langues: LangueType | undefined;
 
+  lastReads: lastReadDB.LastRead[];
+  lastSearchs: lastSearchDB.LastSearch[];
+
   setTheme: (theme: Theme) => void
   getColor: () => void;
   createColor: (color: colorDB.CreatColorProps) => void;
   updateColor: (color: colorDB.Color, id: number) => void;
   deleteColor: (id: number) => void;
+
   getImages: () => void;
   createImages: (uri?: string,
     imageIndex?: number
@@ -63,11 +69,20 @@ interface AppContextValue {
     imageIndex?: number
   ) => void;
   deleteImages: (id: number) => void;
+
   getSettingRead: () => void;
   createSettingRead: (data: settingDB.SettingCreateProps) => void;
   updateSettingRead: (data: settingDB.SettngUpdateProps) => void;
   deleteSettingRead: (id: number) => void;
-  updateLangue: (data: UpdateLangueType) => void
+
+  updateLangue: (data: UpdateLangueType) => void;
+
+  addNewLastRead: (data: lastReadDB.LastRead) => void;
+  removeLastRead: (id: number) => void;
+
+  addNewLastSearch: (data: lastSearchDB.LastSearch) => void;
+  removeLastSearch: (id: number) => void;
+  updateLastSearch: (id: number) => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -88,6 +103,8 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   const [oldTestamentLng, setOldTestamentLng] = useState<bookBible[] | []>([]);
   const [newTestamentLng, setNewTestamentLng] = useState<bookBible[] | []>([]);
   const [lang, setLang] = useState<LangueType>();
+  const [lastReads, setLastReads] = useState<lastReadDB.LastRead[] | []>([]);
+  const [lastSearchs, setLastSearchs] = useState<lastSearchDB.LastSearch[] | []>([]);
 
   const { isDark, setTheme, theme, resolvedTheme } = useTheme();
 
@@ -110,6 +127,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     };
   }, []);
 
+  // Langues
   useEffect(() => {
     if (lang !== undefined) {
       if (lang.bibleLng === 'en') {
@@ -150,6 +168,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     [],
   )
 
+  // Colors
   const getAppColors = useCallback(() => {
     return appColors.map((color, index) => ({
       ...color,
@@ -162,15 +181,14 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   const getColors = useCallback(async () => {
     await colorDB.getColors()
       .then((colorsdb) => {
-        console.log(colorsdb);
 
         if (colorsdb.length > 0) {
           const c = colorsdb[0];
           setColor({
             ...c,
-            bg: c.bg,
-            text: c.text,
-            borderColor: c.borderColor,
+            bg: isDark ? c.bg : c.text,
+            text: !isDark ? c.bg : c.text,
+            borderColor: !isDark ? c.bg : c.text,
             colorIndex: c.colorIndex,
           });
         } else {
@@ -209,6 +227,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     [getColors]
   );
 
+  // Images
   const createImages = useCallback(
     async (
       uri?: string,
@@ -262,6 +281,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     []
   );
 
+  // Setting read
   const getSettingRead = useCallback(
     async () => {
       await settingDB.getSetting()
@@ -308,6 +328,64 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     [getSettingRead]
   );
 
+  // Last read
+  const getLastRead = useCallback(
+    async () => {
+      const res = await lastReadDB.getAllLastRead();
+      setLastReads(res);
+    },
+    []
+  );
+
+  const addNewLastRead = useCallback(
+    async (data: lastReadDB.LastRead) => {
+      await lastReadDB.createLastRead(data);
+      await getLastRead();
+    },
+    [getLastRead]
+  );
+
+  const removeLastRead = useCallback(
+    async (id: number) => {
+      await lastReadDB.removeLastRead(id);
+      await getLastRead();
+    },
+    [getLastRead]
+  );
+
+  // Last search
+  const getLastSearch = useCallback(
+    async () => {
+      const res = await lastSearchDB.getAllLastSearch();
+      setLastSearchs(res);
+    },
+    []
+  );
+
+  const addNewLastSearch = useCallback(
+    async (data: lastSearchDB.LastSearch) => {
+      await lastSearchDB.createLastSearch(data);
+      await getLastSearch();
+    },
+    [getLastSearch]
+  );
+
+  const removeLastSearch = useCallback(
+    async (id: number) => {
+      await lastSearchDB.removeLastSearch(id);
+      await getLastSearch();
+    },
+    [getLastSearch]
+  );
+
+  const updateLastSearch = useCallback(
+    async (id: number) => {
+      await lastSearchDB.updateLastSearch(id);
+      await getLastSearch();
+    },
+    [getLastSearch]
+  );
+
   useEffect(() => {
     if (!isReady) return;
     getImages();
@@ -328,6 +406,15 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     getColors();
   }, [isReady, getColors]);
 
+  useEffect(() => {
+    if (!isReady) return;
+    getLastRead();
+  }, [isReady, getLastRead]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    getLastSearch();
+  }, [isReady, getLastSearch]);
 
   if (!isReady) {
     if (fallback !== undefined) return <>{fallback}</>;
@@ -358,6 +445,8 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     oldTestament: oldTestamentLng,
     newTestament: newTestamentLng,
     langues: lang,
+    lastReads,
+    lastSearchs,
 
     setTheme,
     getColor: getColors,
@@ -373,6 +462,11 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     updateSettingRead,
     deleteSettingRead,
     updateLangue: updateLng,
+    addNewLastRead,
+    removeLastRead,
+    addNewLastSearch,
+    removeLastSearch,
+    updateLastSearch
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

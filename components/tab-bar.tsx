@@ -12,7 +12,7 @@ type TabRoute = {
 };
 
 export default function TabBar({ state, navigation, }: BottomTabBarProps) {
-  const { color, langues } = useApp();
+  const { color, langues, isDark } = useApp();
 
   const language = getTranslation(langues?.appLng || 'mg');
 
@@ -24,7 +24,7 @@ export default function TabBar({ state, navigation, }: BottomTabBarProps) {
   ];
 
   return (
-    <View style={[styles.container]}>
+    <View style={[styles.container, { backgroundColor: isDark ? "#000000af" : "#ffffffb6" }]}>
       <View style={[styles.tabContainer, { backgroundColor: color?.bg, borderColor: color?.borderColor, },]} >
         {state.routes.map((route, index) => {
           const tab = routesMapRecord.find(
@@ -73,7 +73,7 @@ export default function TabBar({ state, navigation, }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { backgroundColor: "red", position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 5, paddingBottom: 15 },
+  container: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 5, paddingBottom: 15, borderTopRightRadius: 40, borderTopLeftRadius: 40, backdropFilter: "20%" },
   tabContainer: { borderWidth: 1, borderRadius: 50, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', },
   tab: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 10, borderRadius: 50, flexDirection: 'row', gap: 6, },
   label: { fontSize: 14, },
