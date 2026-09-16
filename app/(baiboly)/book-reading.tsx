@@ -1,13 +1,18 @@
+import { getArchiveByChapter } from '@/api/archives.repository';
 import AppModal from '@/components/modal';
 import { ThemedView } from '@/components/themed-view';
 import { VerseText } from '@/components/verse-text';
 import { getTranslation } from '@/constants/text';
 import { useApp } from '@/contexts/app.context';
 import { readingVersesBible } from '@/types/bible';
+import { TextAlign } from '@/types/text.type';
 import { getBookById, getPrevAndNextChapter, getVerseBetweenTwoVerseId, getVerseByChapterId } from '@/utils/bible.util';
 import { adjustColor } from '@/utils/color.util';
+import { convertVersesToArrayNumber } from '@/utils/text.util';
+import { Entypo } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -15,32 +20,40 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { styles } from '../(tabs)';
 
 export default function BookReading() {
-  const { bookId, chapterId, startVerse, endVerse } = useLocalSearchParams();
+  const { bookId, chapterId, startVerse, endVerse, } = useLocalSearchParams();
+  const { settingRead, updateSettingRead, isDark, books, verses, langues, addNewArchive, addNewFavorite } = useApp();
+  const language = getTranslation(langues?.appLng || "mg");
+  const { prev, next } = getPrevAndNextChapter(Number(bookId), Number(chapterId), books, verses);
   const router = useRouter()
+  const book = getBookById(Number(bookId), books);
+
   const inputRef = React.useRef<TextInput | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
   const versePositions = useRef<Record<number, number>>({});
-
-  const { settingRead, updateSettingRead, isDark, books, verses, langues } = useApp();
 
   const [data, setData] = useState<readingVersesBible>();
   const [all, setAll] = useState(false);
   const [search, setSearch] = useState('');
   const [onSearch, setOnSearch] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [archived, setArchived] = useState(false);
+  const [favorited, setFavorited] = useState(false);
   const [fontSize, setFontSize] = React.useState(settingRead?.fontSize || 16);
-  const [textAlign, setTextAlign] = React.useState<"left" | "center" | "right" | "justify" | "auto">(settingRead?.textAlign || 'left');
+  const [textAlign, setTextAlign] = React.useState<TextAlign>(settingRead?.textAlign || 'left');
   const [modalVisible, setModalVisible] = useState(false);
   const [titeFormat, settiteFormat] = useState<"row" | "col">(settingRead?.titeFormat || 'row');
-
-  const language = getTranslation(langues?.appLng || "mg");
-
-  const { prev, next } = getPrevAndNextChapter(Number(bookId), Number(chapterId), books, verses);
-
-  const book = getBookById(Number(bookId), books);
+  const [selectedVerse, setSelectedVerse] = useState<number[]>([]);
+  const [archives, setArchives] = useState<number[]>([]);
 
   useEffect(() => {
     setAll((startVerse === undefined && endVerse === undefined) ? true : false)
   }, [endVerse, startVerse])
+
+  useEffect(() => {
+    if (search.length > 0) {
+      setOnSearch(true);
+    }
+  }, [search])
 
   const fetchData = useCallback(() => {
     const res = all
@@ -113,24 +126,24 @@ export default function BookReading() {
     tryScroll();
   }, [firstMatchVerse]);
 
-  const totalMatches = useMemo(() => {
-    if (!search.trim() || !data?.verses) return 0;
+  useEffect(() => {
+    fetchArchives();
+  }, [bookId, chapterId]);
 
-    const normalize = (s: string) =>
-      s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  async function fetchArchives() {
+    const res = await getArchiveByChapter(
+      Number(bookId),
+      Number(chapterId)
+    );
 
-    const q = normalize(search.trim());
-    if (!q) return 0;
+    if (res) {
+      const numbers = res.flatMap((item) =>
+        convertVersesToArrayNumber(item.verses as string)
+      );
 
-    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(escaped, 'gi');
-
-    return data.verses.reduce((total, v) => {
-      const normalizedText = normalize(v.text);
-      const matches = normalizedText.match(regex);
-      return total + (matches ? matches.length : 0);
-    }, 0);
-  }, [search, data?.verses]);
+      setArchives(numbers);
+    }
+  }
 
   const handleUpdateSetting = () => {
     if (!settingRead || typeof settingRead.id === 'undefined') return;
@@ -139,7 +152,7 @@ export default function BookReading() {
     }, 1000);
   };
 
-  function editTextAlign(params: "left" | "center" | "right" | "justify" | "auto") {
+  function editTextAlign(params: TextAlign) {
     setTextAlign(params);
   }
 
@@ -149,6 +162,44 @@ export default function BookReading() {
 
   function editTiteFormat(params: "row" | "col") {
     settiteFormat(params);
+  }
+
+  function handleSelected(v: number) {
+    if (archives.includes(v)) return;
+    setSelectedVerse([...(selectedVerse || []), v]);
+  }
+
+  function handleVersePress(v: number) {
+    if (selectedVerse.length === 0) return;
+    if (selectedVerse.includes(v)) {
+      setSelectedVerse(selectedVerse.filter((item) => item !== v));
+    } else {
+      setSelectedVerse([...selectedVerse, v]);
+    }
+  }
+
+  const copyToClipboard = async () => {
+    const text = data?.verses.filter((v) => selectedVerse.includes(v.verse)).map((v) => v.text).join("\n") || '';
+    await Clipboard.setStringAsync(text);
+
+    setCopied(true);
+    setTimeout(() => { setCopied(false); setSelectedVerse([]); }, 3000);
+  };
+
+  const handleArchive = async () => {
+    const data = { book_number: Number(bookId), chapter: Number(chapterId), verses: selectedVerse.toLocaleString() }
+    addNewArchive(data);
+    setArchived(true);
+    setTimeout(() => { setArchived(false); setSelectedVerse([]); }, 3000);
+
+    fetchArchives();
+  }
+
+  async function handleFavorite() {
+    const data = { book_number: Number(bookId), chapter: Number(chapterId), verse: selectedVerse.toLocaleString() }
+    addNewFavorite(data);
+    setFavorited(true);
+    setTimeout(() => { setFavorited(false); setSelectedVerse([]); }, 3000);
   }
 
   return (
@@ -171,12 +222,12 @@ export default function BookReading() {
           >
             <TextInput
               ref={inputRef}
-              style={[styles.searchInput, { color: 'white', width: '100%' }]}
+              style={[styles.searchInput, { color: 'white', width: '100%', height: 40, paddingVertical: 0 }]}
               placeholder={`${language.searchText} ...`}
               placeholderTextColor={'#ffffff80'}
               onChangeText={(text) => setSearch(text)}
               value={search}
-              onBlur={() => setOnSearch(false)}
+              onBlur={() => search.length === 0 && setOnSearch(false)}
             />
           </View>
         }
@@ -196,10 +247,18 @@ export default function BookReading() {
         </View>
       </View>
 
+      {selectedVerse.length > 0 && (<View style={[styles.buttonFlotting, styles.flexCol, { width: "auto", height: "auto", bottom: 90, right: 10, backgroundColor: `${book?.book_color}ef`, padding: 10, paddingVertical: 15, gap: 12 }]}>
+        <Ionicons onPress={copyToClipboard} name={copied ? "checkmark" : "copy-outline"} size={22} color={"#fff"} />
+        <Ionicons onPress={handleFavorite} name={favorited ? "checkmark" : "heart"} size={26} color={"#fff"} />
+        <Entypo onPress={handleArchive} name={archived ? "check" : "archive"} size={26} color={"#fff"} />
+        <Ionicons name="document-text-outline" size={26} color={"#fff"} />
+        <Ionicons name="close" size={26} color={"#fff"} onPress={() => setSelectedVerse([])} />
+      </View>)}
+
       <ScrollView
         ref={scrollViewRef}
         style={styles.container}
-        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 10 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 10, paddingBottom: 80 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.flexRow, { justifyContent: "center", marginBottom: 8 }]}>
@@ -224,6 +283,9 @@ export default function BookReading() {
               highlight={search}
               size={fontSize}
               textAlign={textAlign}
+              onLongPress={handleSelected}
+              onPress={handleVersePress}
+              isSelected={archives.includes(verse.verse) || selectedVerse?.includes(verse.verse)}
             />
           </View>
         ))}

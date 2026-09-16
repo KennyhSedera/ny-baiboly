@@ -1,29 +1,29 @@
 import { getDB } from './database';
 
-export interface Archive {
+export interface Favorite {
   id?: number;
   book_number: number;
   chapter: number;
-  verses?: string | null;
+  verse?: string;
   created_at?: string;
-}
+};
 
 // CREATE
-export async function createArchive(data: Archive): Promise<number> {
+export async function createFavorite(data: Favorite): Promise<number> {
   const db = await getDB();
   const result = await db.runAsync(
     `
-    INSERT INTO archives (
+    INSERT INTO favorites (
       book_number,
       chapter,
-      verses,
+      verse,
       created_at
     )
     VALUES (?, ?, ?, ?)
     `,
     data.book_number,
     data.chapter,
-    data.verses ?? null,
+    data.verse ?? null,
     new Date().toISOString()
   );
 
@@ -31,26 +31,26 @@ export async function createArchive(data: Archive): Promise<number> {
 }
 
 // READ ALL
-export async function getArchives(): Promise<Archive[]> {
+export async function getFavorites(): Promise<Favorite[]> {
   const db = await getDB();
-  return await db.getAllAsync<Archive>(
+  return await db.getAllAsync<Favorite>(
     `
     SELECT *
-    FROM archives
+    FROM favorites
     ORDER BY created_at DESC
     `
   );
 }
 
 // READ BY ID
-export async function getArchiveById(
+export async function getFavoriteById(
   id: number
-): Promise<Archive | null> {
+): Promise<Favorite | null> {
   const db = await getDB();
-  return await db.getFirstAsync<Archive>(
+  return await db.getFirstAsync<Favorite>(
     `
     SELECT *
-    FROM archives
+    FROM favorites
     WHERE id = ?
     `,
     id
@@ -58,15 +58,15 @@ export async function getArchiveById(
 }
 
 // READ PAR LIVRE + CHAPITRE
-export async function getArchiveByChapter(
+export async function getFavoriteByChapter(
   bookNumber: number,
   chapter: number
-): Promise<Archive[] | null> {
+): Promise<Favorite[] | null> {
   const db = await getDB();
-  return await db.getAllAsync<Archive>(
+  return await db.getAllAsync<Favorite>(
     `
     SELECT *
-    FROM archives
+    FROM favorites
     WHERE book_number = ?
       AND chapter = ?
     `,
@@ -76,35 +76,35 @@ export async function getArchiveByChapter(
 }
 
 // UPDATE
-export async function updateArchive(
+export async function updateFavorite(
   id: number,
-  data: Archive
+  data: Favorite
 ): Promise<void> {
   const db = await getDB();
   await db.runAsync(
     `
-    UPDATE archives
+    UPDATE favorites
     SET
       book_number = ?,
       chapter = ?,
-      verses = ?,
+      verse = ?,
       created_at = ?
     WHERE id = ?
     `,
     data.book_number,
     data.chapter,
-    data.verses ?? null,
+    data.verse ?? null,
     new Date().toISOString(),
     id
   );
 }
 
 // DELETE
-export async function deleteArchive(id: number): Promise<void> {
+export async function deleteFavorite(id: number): Promise<void> {
   const db = await getDB();
   await db.runAsync(
     `
-    DELETE FROM archives
+    DELETE FROM favorites
     WHERE id = ?
     `,
     id
@@ -112,8 +112,8 @@ export async function deleteArchive(id: number): Promise<void> {
 }
 
 // DELETE ALL
-export async function deleteAllArchives(): Promise<void> {
+export async function deleteAllFavorites(): Promise<void> {
   const db = await getDB();
-  await db.runAsync('DELETE FROM archives');
+  await db.runAsync('DELETE FROM favorites');
 }
 

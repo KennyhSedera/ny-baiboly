@@ -6,7 +6,7 @@ import { info } from '@/utils/bible.util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, PanResponder, Pressable, Text, View } from 'react-native';
 import { styles } from '.';
 
 const ScreenBooks = () => {
@@ -19,17 +19,30 @@ const ScreenBooks = () => {
     router.push({ pathname: '/book-chapter', params: { bookId } });
   }
 
-  const renderItem = (book: bookBible) => {
-    return (
-      <Pressable
-        key={book.book_number}
-        onPress={() => handlePress(book.book_number)}
-        style={[styles.bookCard, { borderColor: book.book_color, backgroundColor: `${book.book_color}30` }]}
-      >
-        <Text style={[styles.bookTitle, { color: book.book_color }]}>{book.long_name}</Text>
-      </Pressable>
-    )
-  }
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > 20 &&
+        Math.abs(gestureState.dx) > Math.abs(gestureState.dy),
+
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -50) {
+          setSelectedBook('new');
+        } else if (gestureState.dx > 50) {
+          setSelectedBook('last');
+        }
+      },
+    })
+  ).current;
+
+  const renderItemFlatlist = ({ item }: { item: bookBible }) => (
+    <Pressable
+      onPress={() => handlePress(item.book_number)}
+      style={[styles.bookCard, { borderColor: item.book_color, backgroundColor: `${item.book_color}30`, margin: "1%", width: "48%", paddingVertical: 10 }]}
+    >
+      <Text style={[styles.bookTitle, { color: item.book_color }]}>{item.long_name}</Text>
+    </Pressable>
+  );
   return (
     <ThemedView style={styles.container}>
 
@@ -66,24 +79,17 @@ const ScreenBooks = () => {
         </View>
       </View>
 
-      <ScrollView
-        style={styles.container}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {selectedBook === 'last' ?
-          <View style={styles.booksContainer}>
-            {oldTestament.map((book) => (
-              renderItem(book)
-            ))}
-          </View> :
-          <View style={styles.booksContainer}>
-            {newTestament.map((book) => (
-              renderItem(book)
-            ))}
-          </View>
-        }
-      </ScrollView>
+      <FlatList
+        {...panResponder.panHandlers}
+        data={selectedBook === 'last' ? oldTestament : newTestament}
+        renderItem={renderItemFlatlist}
+        keyExtractor={(item) => item.book_number.toString()}
+        numColumns={2}
+        contentContainerStyle={{
+          paddingBottom: 90,
+          paddingTop: 4,
+        }}
+      />
     </ThemedView>
   )
 }

@@ -18,14 +18,14 @@ export default function TabBar({ state, navigation, }: BottomTabBarProps) {
 
   const routesMapRecord: TabRoute[] = [
     { label: language.homeText, icon: 'home-outline', activeIcon: 'home', route: 'index', },
-    { label: language.bibleText, icon: 'book-outline', activeIcon: 'book', route: 'book', },
-    { label: language.noteText, icon: 'clipboard-outline', activeIcon: 'clipboard', route: 'my-note', },
+    { label: language.bibleText, icon: 'bookmarks-outline', activeIcon: 'bookmarks', route: 'book', },
+    { label: language.noteText, icon: 'document-text-outline', activeIcon: 'document-text', route: 'my-note', },
     { label: language.settingText, icon: 'cog-outline', activeIcon: 'cog', route: 'app-setting', },
   ];
 
   return (
     <View style={[styles.container, { backgroundColor: isDark ? "#000000af" : "#ffffffb6" }]}>
-      <View style={[styles.tabContainer, { backgroundColor: color?.bg, borderColor: color?.borderColor, },]} >
+      <View style={[styles.tabContainer, { backgroundColor: color?.bg, borderColor: `${color?.borderColor}50`, },]} >
         {state.routes.map((route, index) => {
           const tab = routesMapRecord.find(
             (item) => item.route === route.name
@@ -73,7 +73,7 @@ export default function TabBar({ state, navigation, }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 5, paddingBottom: 15, borderTopRightRadius: 40, borderTopLeftRadius: 40, backdropFilter: "20%" },
+  container: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 8, paddingBottom: 20, borderTopRightRadius: 40, borderTopLeftRadius: 40, backdropFilter: "20%" },
   tabContainer: { borderWidth: 1, borderRadius: 50, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', },
   tab: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 10, borderRadius: 50, flexDirection: 'row', gap: 6, },
   label: { fontSize: 14, },

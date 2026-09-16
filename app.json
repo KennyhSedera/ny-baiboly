@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Ny Baiboly by Kennyh",
+    "name": "Ny Baiboly",
     "slug": "Ny_Baiboly_by_Kennyh",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -32,12 +32,13 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
-          "image": "./assets/images/baiboly3.png",
+            "image": "./assets/images/baiboly3.png",
             "backgroundColor": "#000000"
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

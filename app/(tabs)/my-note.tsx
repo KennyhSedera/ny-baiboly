@@ -7,6 +7,8 @@ import { useApp } from '@/contexts/app.context'
 import { adjustColor } from '@/utils/color.util'
 import { formatDateHeure } from '@/utils/date.utils'
 import { extractPreviewText } from '@/utils/note-content.utils'
+import { capitalizeText } from '@/utils/text.util'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useFocusEffect, useRouter } from 'expo-router'
@@ -82,7 +84,7 @@ export default function MyNote() {
     >
       <Text numberOfLines={2} style={[styles.bookTitle, { color: color?.text, textAlign: 'left' }]}>{n.title || 'Pas de titre'}</Text>
       <ThemedText numberOfLines={4}>{extractPreviewText(n?.content || "")}</ThemedText>
-      <Text style={{ color: adjustColor(color?.bg || "", isDark ? 30 : -20) }}>{formatDateHeure(new Date(n.created_at))}</Text>
+      <Text style={{ color: adjustColor(color?.bg || "", isDark ? 30 : -20) }}>{capitalizeText(formatDateHeure(new Date(n.created_at)))}</Text>
     </TouchableOpacity>
   );
 
@@ -92,10 +94,12 @@ export default function MyNote() {
         <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, }]}>{t.noteText}</Text>
         <Ionicons name="search" size={24} color={color?.text} />
       </View>
+
       <Pressable onPress={() => router.push('/note-input')} style={[styles.buttonFlotting, { backgroundColor: color?.text, bottom: 85, right: 10 }]}>
         <Ionicons name='add' size={32} color={color?.bg} />
       </Pressable>
-      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+      {notes.length > 0 && <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1, gap: 10 }}>
             {leftColumn.map((n, i) => renderCard(n, i * 2))}
@@ -104,7 +108,13 @@ export default function MyNote() {
             {rightColumn.map((n, i) => renderCard(n, i * 2 + 1))}
           </View>
         </View>
-      </ScrollView>
+      </ScrollView>}
+
+      {notes.length === 0 && (
+        <View style={[styles.flexCol, { marginTop: 40 }]}>
+          <MaterialCommunityIcons name="file-document-remove-outline" size={60} color={color?.text} />
+          <Text style={[styles.modalText, { color: color?.text, textAlign: "center" }]}>{t.noteEmptyText}</Text></View>
+      )}
 
       <AppModal visible={open} position='center' onClose={handleClose} closeOnBackdrop={false} color={color?.bg}>
         <View>

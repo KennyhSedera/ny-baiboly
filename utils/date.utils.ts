@@ -53,7 +53,7 @@ export function formatDateHeure(date: string | Date): string {
 
   return d.toLocaleString("fr-FR", {
     day: "2-digit",
-    month: "long",
+    month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",

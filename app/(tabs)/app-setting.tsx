@@ -6,13 +6,11 @@ import { Colors } from '@/types/colors.type';
 import { adjustColor } from '@/utils/color.util';
 import { images } from '@/utils/image.util';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { styles } from '.';
 
 export default function AppSetting() {
-  const router = useRouter();
   const { color, updateColor, image, updateImages, isDark, setTheme, theme, appColors, langues, updateLangue } = useApp();
   const [language, setLanguage] = useState(getTranslation(langues?.appLng || "mg"));
   const info = getInfo(langues?.appLng || 'mg');

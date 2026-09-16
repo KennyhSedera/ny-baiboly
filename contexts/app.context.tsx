@@ -1,22 +1,15 @@
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
-
+import * as archivesDB from '@/api/archives.repository';
 import * as colorDB from '@/api/colors.repository';
 import { getDB } from '@/api/database';
+import * as favoritesDB from '@/api/favories.repository';
 import * as imagesDB from '@/api/image.repository';
-import { createLangue, getLangues, LangueType, updateLangue, UpdateLangueType } from '@/api/langues.repository';
+import { createLangue, getLangues, LangueType, updateLangue } from '@/api/langues.repository';
 import * as lastReadDB from '@/api/last.read.repository';
 import * as lastSearchDB from '@/api/last.search.repository';
 import * as notesDB from '@/api/notes.repository';
 import * as settingDB from '@/api/setting.read.repository';
 import { Setting } from '@/api/setting.read.repository';
+import { getDailyPrayer } from '@/constants/prayer';
 import { Theme } from '@/hooks/use-theme';
 import { bookBible, verseBible } from '@/types/bible';
 import { Colors } from '@/types/colors.type';
@@ -24,9 +17,21 @@ import { bookEn, versesEn } from '@/utils/bible.en.util';
 import { bookFr, versesFr } from '@/utils/bible.fr.util';
 import { books as booksMg, verses as versesMg } from '@/utils/bible.util';
 import { appColors } from '@/utils/color.util';
+import * as Localization from 'expo-localization';
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState, } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { useTheme } from './theme.context';
 
-export const indexChangeDark = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+const SUPPORTED_LANGUES = ['fr', 'en', 'mg'] as const;
+
+function getDeviceDefaultLangue(): LangueType {
+  const deviceLang = Localization.getLocales()[0]?.languageCode;
+  const bibleLng = (SUPPORTED_LANGUES as readonly string[]).includes(deviceLang ?? '')
+    ? (deviceLang as typeof SUPPORTED_LANGUES[number])
+    : 'mg';
+
+  return { id: 1, appLng: bibleLng, bibleLng, created_at: new Date().toISOString() } as LangueType;
+}
 
 interface AppContextValue {
   isReady: boolean;
@@ -37,7 +42,7 @@ interface AppContextValue {
 
   colors: typeof colorDB;
   images: typeof imagesDB;
-  notes: typeof notesDB;
+  notes: notesDB.Note[];
 
   appColors: Colors[];
 
@@ -52,6 +57,9 @@ interface AppContextValue {
 
   lastReads: lastReadDB.LastRead[];
   lastSearchs: lastSearchDB.LastSearch[];
+  favorites: favoritesDB.Favorite[];
+  archives: archivesDB.Archive[];
+  prayer: { title: string, text: string } | null;
 
   setTheme: (theme: Theme) => void
   getColor: () => void;
@@ -75,7 +83,7 @@ interface AppContextValue {
   updateSettingRead: (data: settingDB.SettngUpdateProps) => void;
   deleteSettingRead: (id: number) => void;
 
-  updateLangue: (data: UpdateLangueType) => void;
+  updateLangue: (data: LangueType) => void;
 
   addNewLastRead: (data: lastReadDB.LastRead) => void;
   removeLastRead: (id: number) => void;
@@ -83,6 +91,12 @@ interface AppContextValue {
   addNewLastSearch: (data: lastSearchDB.LastSearch) => void;
   removeLastSearch: (id: number) => void;
   updateLastSearch: (id: number) => void;
+
+  addNewFavorite: (data: favoritesDB.Favorite) => void;
+  removeFavorite: (id: number) => void;
+
+  addNewArchive: (data: archivesDB.Archive) => void;
+  removeArchive: (id: number) => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -98,13 +112,17 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   const [color, setColor] = useState<colorDB.Color | null>(null);
   const [image, setImage] = useState<imagesDB.ImageRecord | null>(null);
   const [settingRead, setSettingRead] = useState<Setting | null>(null);
-  const [booksLng, setBooksLng] = useState<bookBible[] | []>([]);
-  const [versesLng, setVersesLng] = useState<verseBible[] | []>([]);
-  const [oldTestamentLng, setOldTestamentLng] = useState<bookBible[] | []>([]);
-  const [newTestamentLng, setNewTestamentLng] = useState<bookBible[] | []>([]);
+  const [booksLng, setBooksLng] = useState<bookBible[]>([]);
+  const [versesLng, setVersesLng] = useState<verseBible[]>([]);
+  const [oldTestamentLng, setOldTestamentLng] = useState<bookBible[]>([]);
+  const [newTestamentLng, setNewTestamentLng] = useState<bookBible[]>([]);
   const [lang, setLang] = useState<LangueType>();
-  const [lastReads, setLastReads] = useState<lastReadDB.LastRead[] | []>([]);
-  const [lastSearchs, setLastSearchs] = useState<lastSearchDB.LastSearch[] | []>([]);
+  const [lastReads, setLastReads] = useState<lastReadDB.LastRead[]>([]);
+  const [lastSearchs, setLastSearchs] = useState<lastSearchDB.LastSearch[]>([]);
+  const [favorites, setFavorites] = useState<favoritesDB.Favorite[]>([]);
+  const [archives, setArchives] = useState<archivesDB.Archive[]>([]);
+  const [notes, setNotes] = useState<notesDB.Note[]>([]);
+  const [prayer, setPrayer] = useState<{ title: string, text: string } | null>(null);
 
   const { isDark, setTheme, theme, resolvedTheme } = useTheme();
 
@@ -130,6 +148,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   // Langues
   useEffect(() => {
     if (lang !== undefined) {
+      getPrayers(lang);
       if (lang.bibleLng === 'en') {
         setBooksLng(bookEn);
         setVersesLng(versesEn);
@@ -151,30 +170,43 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   }, [lang])
 
   const getLang = useCallback(async () => {
-    const lngs = await getLangues();
+    try {
+      const lngs = await getLangues();
 
-    if (lngs.length === 0) {
-      await createLangue({ appLng: 'mg', bibleLng: 'mg' });
-      return;
+      if (lngs.length === 0) {
+        const defaultLangue = getDeviceDefaultLangue();
+        await createLangue(defaultLangue);
+        setLang(defaultLangue as LangueType);
+        return;
+      }
+      setLang(lngs[0]);
+    } catch (err) {
+      console.error('Erreur SQLite (getLang):', err);
+      setError(err as Error);
     }
-    setLang(lngs[0]);
   }, []);
 
   const updateLng = useCallback(
-    async (data: UpdateLangueType) => {
-      await updateLangue(data);
-      await getLang();
+    async (data: LangueType) => {
+      try {
+        await updateLangue(data);
+        await getLang();
+      } catch (err) {
+        console.error('Erreur SQLite (updateLangue):', err);
+        setError(err as Error);
+      }
     },
-    [],
+    [getLang],
   )
 
   // Colors
   const getAppColors = useCallback(() => {
     return appColors.map((color, index) => ({
       ...color,
-      bg: !(indexChangeDark.includes(index) && isDark) ? appColors[index].text : appColors[index].bg,
-      text: !(indexChangeDark.includes(index) && isDark) ? appColors[index].bg : appColors[index].text,
-      borderColor: !(indexChangeDark.includes(index) && isDark) ? appColors[index].borderColor : appColors[index].text,
+      bg: isDark ? color.bg : color.text,
+      text: !isDark ? color.bg : color.text,
+      borderColor: !isDark ? color.bg : color.text,
+      colorIndex: index,
     }))
   }, [isDark]);
 
@@ -192,7 +224,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
             colorIndex: c.colorIndex,
           });
         } else {
-          colorDB.createColor({ ...appColors[0], colorIndex: 1 }).then(() => {
+          colorDB.createColor({ ...appColors[0], colorIndex: 0 }).then(() => {
             getColors();
           });
         }
@@ -331,24 +363,39 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   // Last read
   const getLastRead = useCallback(
     async () => {
-      const res = await lastReadDB.getAllLastRead();
-      setLastReads(res);
+      try {
+        const res = await lastReadDB.getAllLastRead();
+        setLastReads(res);
+      } catch (err) {
+        console.error('Erreur SQLite (getLastRead):', err);
+        setError(err as Error);
+      }
     },
     []
   );
 
   const addNewLastRead = useCallback(
     async (data: lastReadDB.LastRead) => {
-      await lastReadDB.createLastRead(data);
-      await getLastRead();
+      try {
+        await lastReadDB.createLastRead(data);
+        await getLastRead();
+      } catch (err) {
+        console.error('Erreur SQLite (addNewLastRead):', err);
+        setError(err as Error);
+      }
     },
     [getLastRead]
   );
 
   const removeLastRead = useCallback(
     async (id: number) => {
-      await lastReadDB.removeLastRead(id);
-      await getLastRead();
+      try {
+        await lastReadDB.removeLastRead(id);
+        await getLastRead();
+      } catch (err) {
+        console.error('Erreur SQLite (removeLastRead):', err);
+        setError(err as Error);
+      }
     },
     [getLastRead]
   );
@@ -356,34 +403,183 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   // Last search
   const getLastSearch = useCallback(
     async () => {
-      const res = await lastSearchDB.getAllLastSearch();
-      setLastSearchs(res);
+      try {
+        const res = await lastSearchDB.getAllLastSearch();
+        setLastSearchs(res);
+      } catch (err) {
+        console.error('Erreur SQLite (getLastSearch):', err);
+        setError(err as Error);
+      }
     },
     []
   );
 
   const addNewLastSearch = useCallback(
     async (data: lastSearchDB.LastSearch) => {
-      await lastSearchDB.createLastSearch(data);
-      await getLastSearch();
+      try {
+        await lastSearchDB.createLastSearch(data);
+        await getLastSearch();
+      } catch (err) {
+        console.error('Erreur SQLite (addNewLastSearch):', err);
+        setError(err as Error);
+      }
     },
     [getLastSearch]
   );
 
   const removeLastSearch = useCallback(
     async (id: number) => {
-      await lastSearchDB.removeLastSearch(id);
-      await getLastSearch();
+      try {
+        await lastSearchDB.removeLastSearch(id);
+        await getLastSearch();
+      } catch (err) {
+        console.error('Erreur SQLite (removeLastSearch):', err);
+        setError(err as Error);
+      }
     },
     [getLastSearch]
   );
 
   const updateLastSearch = useCallback(
     async (id: number) => {
-      await lastSearchDB.updateLastSearch(id);
-      await getLastSearch();
+      try {
+        await lastSearchDB.updateLastSearch(id);
+        await getLastSearch();
+      } catch (err) {
+        console.error('Erreur SQLite (updateLastSearch):', err);
+        setError(err as Error);
+      }
     },
     [getLastSearch]
+  );
+
+  // Favorites
+  const getFavorites = useCallback(
+    async () => {
+      try {
+        const res = await favoritesDB.getFavorites();
+        setFavorites(res);
+      } catch (err) {
+        console.error('Erreur SQLite (getFavorites):', err);
+        setError(err as Error);
+      }
+    },
+    []
+  );
+
+  const addNewFavorite = useCallback(
+    async (data: favoritesDB.Favorite) => {
+      try {
+        await favoritesDB.createFavorite(data);
+        await getFavorites();
+      } catch (err) {
+        console.error('Erreur SQLite (addNewFavorite):', err);
+        setError(err as Error);
+      }
+    },
+    [getFavorites]
+  );
+
+  const removeFavorite = useCallback(
+    async (id: number) => {
+      try {
+        await favoritesDB.deleteFavorite(id);
+        await getFavorites();
+      } catch (err) {
+        console.error('Erreur SQLite (removeFavorite):', err);
+        setError(err as Error);
+      }
+    },
+    [getFavorites]
+  );
+
+  const updateFavorite = useCallback(
+    async (id: number, data: favoritesDB.Favorite) => {
+      try {
+        await favoritesDB.updateFavorite(id, data);
+        await getFavorites();
+      } catch (err) {
+        console.error('Erreur SQLite (updateFavorite):', err);
+        setError(err as Error);
+      }
+    },
+    [getFavorites]
+  );
+
+  // Archives
+  const getArchives = useCallback(
+    async () => {
+      try {
+        const res = await archivesDB.getArchives();
+        setArchives(res);
+      } catch (err) {
+        console.error('Erreur SQLite (getArchives):', err);
+        setError(err as Error);
+      }
+    },
+    []
+  );
+
+  const addNewArchive = useCallback(
+    async (data: archivesDB.Archive) => {
+      try {
+        await archivesDB.createArchive(data);
+        await getArchives();
+      } catch (err) {
+        console.error('Erreur SQLite (addNewArchive):', err);
+        setError(err as Error);
+      }
+    },
+    [getArchives]
+  );
+
+  const removeArchive = useCallback(
+    async (id: number) => {
+      try {
+        await archivesDB.deleteArchive(id);
+        await getArchives();
+      } catch (err) {
+        console.error('Erreur SQLite (removeArchive):', err);
+        setError(err as Error);
+      }
+    },
+    [getArchives]
+  );
+
+  const updateArchive = useCallback(
+    async (id: number, data: archivesDB.Archive) => {
+      try {
+        await archivesDB.updateArchive(id, data);
+        await getArchives();
+      } catch (err) {
+        console.error('Erreur SQLite (updateArchive):', err);
+        setError(err as Error);
+      }
+    },
+    [getArchives]
+  );
+
+  // Notes
+  const getNotes = useCallback(
+    async () => {
+      try {
+        const res = await notesDB.getNotes();
+        setNotes(res);
+      } catch (err) {
+        console.error('Erreur SQLite (getNotes):', err);
+        setError(err as Error);
+      }
+    }, []
+  );
+
+  // Prière
+  const getPrayers = useCallback(
+    (langue: LangueType) => {
+      const prayer = getDailyPrayer();
+      const title = prayer.title[langue?.bibleLng as 'fr' | 'en'];
+      const text = prayer.text[langue?.bibleLng as 'fr' | 'en'];
+      setPrayer({ title, text });
+    }, []
   );
 
   useEffect(() => {
@@ -416,6 +612,21 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     getLastSearch();
   }, [isReady, getLastSearch]);
 
+  useEffect(() => {
+    if (!isReady) return;
+    getFavorites();
+  }, [isReady, getFavorites]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    getArchives();
+  }, [isReady, getArchives]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    getNotes();
+  }, [isReady, getNotes]);
+
   if (!isReady) {
     if (fallback !== undefined) return <>{fallback}</>;
     return (
@@ -432,7 +643,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     error,
     colors: colorDB,
     images: imagesDB,
-    notes: notesDB,
+    notes,
     appColors: getAppColors(),
     theme,
     resolvedTheme,
@@ -447,6 +658,9 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     langues: lang,
     lastReads,
     lastSearchs,
+    favorites,
+    archives,
+    prayer,
 
     setTheme,
     getColor: getColors,
@@ -466,7 +680,11 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     removeLastRead,
     addNewLastSearch,
     removeLastSearch,
-    updateLastSearch
+    updateLastSearch,
+    addNewFavorite,
+    removeFavorite,
+    addNewArchive,
+    removeArchive
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -475,7 +693,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
 export function useApp(): AppContextValue {
   const ctx = useContext(AppContext);
   if (!ctx) {
-    throw new Error('useApp() doit être utilisé à l’intérieur de <AppProvider>.');
+    throw new Error('useApp() doit être utilisé à l\'intérieur de <AppProvider>.');
   }
   return ctx;
 }

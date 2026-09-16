@@ -138,21 +138,46 @@ export const getPrevAndNextChapter = (bookId: number, chapterId: number, bookLng
   return { prevBookId, prevChapter, nextBookId, nextChapter, prev, next };
 };
 
-export const getOneVerse = (dataLng: verseBible[], bookLng: bookBible[]) => {
-  const nb = randomNumber(0, dataLng.length);
-  const verse = dataLng[nb];
-  const book = verse ? getBookById(verse.book_number, bookLng) : undefined;
+export const getOneVerse = (
+  dataLng: verseBible[],
+  bookLng: bookBible[]
+) => {
+  if (!dataLng.length) {
+    return {
+      book: '',
+      book_number: 0,
+      chapter: 0,
+      verse: 0,
+      text: '',
+    };
+  }
 
-  const data = {
+  const today = new Date();
+
+  const seed =
+    today.getFullYear() * 10000 +
+    (today.getMonth() + 1) * 100 +
+    today.getDate();
+
+  const randomSeed = Math.sin(seed) * 10000;
+  const random = randomSeed - Math.floor(randomSeed);
+
+  const index = Math.floor(random * dataLng.length);
+
+  const verse = dataLng[index];
+
+  const book = verse
+    ? getBookById(verse.book_number, bookLng)
+    : undefined;
+
+  return {
     book: book?.long_name ?? '',
     book_number: verse?.book_number ?? 0,
     chapter: verse?.chapter ?? 0,
     verse: verse?.verse ?? 0,
     text: verse ? removeNTag(verse.text) : '',
   };
-
-  return data;
-}
+};
 
 export const getSearch = (text: string, verse: verseBible[] = parsedData.verses, bookLng: bookBible[]) => {
   const search = text.toLowerCase();

@@ -4,6 +4,7 @@ import { getTranslation } from '@/constants/text'
 import { useApp } from '@/contexts/app.context'
 import { formatDateLong } from '@/utils/date.utils'
 import useKeyboardVisible from '@/utils/keyboard.util'
+import { capitalizeText } from '@/utils/text.util'
 import { RichText, useBridgeState, useEditorBridge } from '@10play/tentap-editor'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
@@ -177,7 +178,7 @@ export default function NoteInput() {
             onBlur={() => setFocused(false)}
           />
           <Text style={{ paddingHorizontal: 15, color: isDark ? '#5f5f5f' : '#3b3b3b', marginTop: 10 }}>
-            {formatDateLong(new Date())}
+            {capitalizeText(formatDateLong(new Date()))}
             {"       "}
             {charCount > 0 && `${charCount} ${wordUnitLabel}`}
           </Text>

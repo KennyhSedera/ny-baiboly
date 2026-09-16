@@ -15,7 +15,7 @@ import { styles } from '../(tabs)';
 
 export default function AppSearchGlobal() {
   const [search, setSearch] = useState('');
-  const { color, books, verses, langues, lastSearchs, addNewLastRead, addNewLastSearch, removeLastSearch, updateLastSearch } = useApp();
+  const { color, books, verses, langues, lastSearchs, isDark, addNewLastRead, addNewLastSearch, removeLastSearch, updateLastSearch } = useApp();
   const [verse, setVerse] = React.useState<verseRandom[]>();
   const router = useRouter();
   const text = getTranslation(langues?.appLng as 'mg')
@@ -74,7 +74,7 @@ export default function AppSearchGlobal() {
 
         {verse && verse?.length === 0 && !search && lastSearchs.length === 0 && (
           <View style={[styles.flexCol, { justifyContent: 'center', marginTop: 20 }]}>
-            <Ionicons name='search-outline' size={80} color={color?.text} />
+            <Ionicons name='search-outline' size={60} color={color?.text} />
             <Text style={{ color: color?.text }}>{text.searchResult.empty}</Text>
           </View>
         )}
@@ -82,7 +82,7 @@ export default function AppSearchGlobal() {
         {verse && verse?.length > 0 && verse?.map((verse, index) => (
           <Pressable
             key={index}
-            style={[styles.flexCol, { backgroundColor: color?.bg, alignItems: "flex-start", padding: 8, paddingHorizontal: 12, borderRadius: 10 }]}
+            style={[styles.flexCol, { backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, alignItems: "flex-start", padding: 8, paddingHorizontal: 12, borderRadius: 10 }]}
             onPress={() => handlePress(verse)}
           >
             <Text style={{ color: color?.text, fontSize: 18, fontWeight: "bold" }}>
@@ -97,7 +97,7 @@ export default function AppSearchGlobal() {
           </Pressable>
         ))}
 
-        {lastSearchs && search.length === 0 && (
+        {lastSearchs && lastSearchs?.length > 0 && search.length === 0 && (
           <View>
             <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%", marginBottom: 15 }]}>
               <Text style={[styles.modalText, { color: color?.text }]}>{infoText.lastSearchText}</Text>
@@ -107,7 +107,7 @@ export default function AppSearchGlobal() {
               lastSearchs?.map((last, index) => {
                 const bookName = books?.find(b => b.book_number === last.book_number)?.long_name || '';
                 return (
-                  <View key={index} style={[styles.flexRow, { padding: 8, paddingHorizontal: 12, borderRadius: 10, backgroundColor: color?.bg, width: '100%', marginBottom: 4 }]}>
+                  <View key={index} style={[styles.flexRow, { padding: 8, paddingHorizontal: 12, borderRadius: 10, backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, width: '100%', marginBottom: 4 }]}>
                     <Pressable
                       style={[styles.flexCol, { alignItems: "flex-start", width: "92%" }]}
                       onPress={() => handlePress({ ...(last as any), book: bookName })}

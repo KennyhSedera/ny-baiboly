@@ -1,3 +1,4 @@
+import { TextAlign } from '@/types/text.type';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { ThemedText } from './themed-text';
@@ -33,9 +34,9 @@ function parseVerseText(text: string): VerseSegment[] {
   return segments;
 }
 
-function renderHighlighted(content: string, highlight: string | undefined, key: string, color: string, fontSize: number) {
+function renderHighlighted(content: string, highlight: string | undefined, key: string, color: string, fontSize: number, isSelected?: boolean) {
   if (!highlight?.trim()) {
-    return <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4 }]}>{content}</ThemedText>;
+    return <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4, }, isSelected && { textDecorationLine: 'underline' }]}>{content}</ThemedText>;
   }
 
   const escaped = highlight.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -43,7 +44,7 @@ function renderHighlighted(content: string, highlight: string | undefined, key: 
   const parts = content.split(regex);
 
   return (
-    <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4 }]}>
+    <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4, }, isSelected && { textDecorationLine: 'underline' }]}>
       {parts.map((part, i) =>
         part.toLowerCase() === highlight.trim().toLowerCase() ? (
           <Text key={i} style={[styles.highlight, { backgroundColor: color, color: "#fff" }]}>{part}</Text>
@@ -62,13 +63,19 @@ export function VerseText({
   highlight,
   size,
   textAlign,
+  isSelected,
+  onLongPress,
+  onPress,
 }: {
   text: string;
   verseNumber: number;
   color?: string;
   highlight?: string;
   size?: number;
-  textAlign: 'left' | 'center' | 'right' | 'justify' | 'auto';
+  textAlign: TextAlign;
+  isSelected?: boolean;
+  onLongPress?: (verse: number) => void;
+  onPress?: (verse: number) => void;
 }) {
   const segments = parseVerseText(text);
   const [fontSize, setFontSize] = React.useState(16);
@@ -82,16 +89,28 @@ export function VerseText({
     }
   }, [size]);
 
+  function handleLongPress(params: number) {
+    onLongPress && onLongPress(params);
+  }
+
+  function handlePress(params: number) {
+    onPress && onPress(params);
+  }
+
   return (
-    <Text style={[styles.verseContainer, { fontSize, textAlign }]}>
+    <Text
+      onLongPress={() => handleLongPress(verseNumber)}
+      onPress={() => handlePress(verseNumber)}
+      style={[styles.verseContainer, { fontSize, textAlign }]}
+    >
       {section && (
         <Text style={[styles.sectionTitle, { color, fontSize: fontSize - 2 }]}>
           {'\n'}{section.content}{'\n\n'}
         </Text>
       )}
 
-      <Text style={[styles.verseText, { fontSize, lineHeight: fontSize + 4 }]}>
-        <Text style={[styles.verseNumber, { color }]}>
+      <Text style={[styles.verseText, { fontSize, lineHeight: fontSize + 4 }, isSelected && { fontWeight: 'bold', color: color }]}>
+        <Text style={[styles.verseNumber, { color }, isSelected && { color: color }]}>
           {' '}{verseNumber}{' '}
         </Text>
         {'  '}
@@ -104,7 +123,7 @@ export function VerseText({
             );
           }
 
-          return renderHighlighted(segment.content, highlight, String(index), color, fontSize);
+          return renderHighlighted(segment.content, highlight, String(index), color, fontSize, isSelected);
         })}
       </Text>
     </Text>

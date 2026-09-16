@@ -1,18 +1,19 @@
 import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { ThemedText } from '@/components/themed-text';
 import { getInfo, getTranslation } from '@/constants/text';
 import { useApp } from '@/contexts/app.context';
 import { verseRandom } from '@/types/bible';
 import { getBookById, getOneVerse, info } from '@/utils/bible.util';
 import { images } from '@/utils/image.util';
-import { parseVerse } from '@/utils/text.util';
+import { capitalizeText, parseVerse } from '@/utils/text.util';
+import { Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { default as MaterialIcons } from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRouter } from 'expo-router';
+import { RelativePathString, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function BookIndex() {
-  const { color, image, isDark, books, verses, langues, lastReads, removeLastRead, newTestament, oldTestament } = useApp();
+  const { color, image, isDark, books, verses, langues, lastReads, newTestament, oldTestament, notes, archives, favorites, prayer, removeLastRead, } = useApp();
   const router = useRouter();
   const [verse, setVerse] = React.useState<verseRandom>();
   const [language, setLanguage] = useState(getTranslation(langues?.appLng || "mg"));
@@ -38,6 +39,45 @@ export default function BookIndex() {
   const old = `( ${getBookById(oldTestament[0]?.book_number, oldTestament)?.long_name} - ${getBookById(oldTestament[oldTestament.length - 1]?.book_number, oldTestament)?.long_name} )`;
   const newt = `( ${getBookById(newTestament[0]?.book_number, newTestament)?.long_name} - ${getBookById(newTestament[newTestament.length - 1]?.book_number, newTestament)?.long_name} )`;
 
+  const stats = [
+    {
+      value: archives.length > 99 ? '99+' : archives.length,
+      label: language.archivesText,
+      icon: "archive",
+      lightBg: "#e6f4ff",
+      darkBg: "#173247",
+      lightText: "#1671b8",
+      darkText: "#5db8f5",
+      lightLabel: "#315a73",
+      darkLabel: "#b5ddf5",
+      route: 'verse-archived'
+    },
+    {
+      value: favorites.length > 99 ? '99+' : favorites.length,
+      label: language.favoritesText,
+      icon: "heart",
+      lightBg: "#ffd6d6",
+      darkBg: "#3d1818",
+      lightText: "#9b0000",
+      darkText: "#f55151",
+      lightLabel: "#6b1818",
+      darkLabel: "#f0a0a0",
+      route: 'verse-favoris'
+    },
+    {
+      value: notes.length > 99 ? '99+' : notes.length,
+      label: language.noteText,
+      icon: "document-text",
+      lightBg: "#e9f8ed",
+      darkBg: "#183a24",
+      lightText: "#258a45",
+      darkText: "#62d98a",
+      lightLabel: "#396548",
+      darkLabel: "#b9e8c8",
+      route: 'my-note'
+    },
+  ];
+
   const renderHeader = () => {
     return (
       <View style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -45,22 +85,25 @@ export default function BookIndex() {
           <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%" }]}>
             <Text style={[styles.headerTitle, { color: !isDark ? color?.bg : color?.text, fontSize: 24 }]}>{info.description}</Text>
             <View style={styles.flexRow}>
-              <Pressable onPress={() => router.push("/app-setting")}>
-                <MaterialIcons name="cog" size={26} color={!isDark ? color?.bg : color?.text} />
-              </Pressable>
               <Pressable>
                 <Ionicons name="information-circle" size={26} color={!isDark ? color?.bg : color?.text} />
               </Pressable>
             </View>
           </View>
 
-          <Pressable onPress={() => router.push("/app-search-global")} style={[styles.flexRow, styles.searchInput, { justifyContent: "space-between", width: "100%", borderWidth: 1, borderColor: !isDark ? color?.bg : color?.borderColor, backgroundColor: `${!isDark ? color?.text : color?.bg}96`, paddingVertical: 10 }]}>
+          <Pressable onPress={() => router.push("/app-search-global")} style={[styles.flexRow, styles.searchInput, { justifyContent: "space-between", width: "100%", borderWidth: 1, borderColor: !isDark ? color?.bg : color?.borderColor, backgroundColor: `${!isDark ? color?.text : color?.bg}60`, paddingVertical: 10 }]}>
             <Text style={[styles.searchInputText, { color: !isDark ? color?.bg : color?.text }]}>{language.searchText} ....</Text>
             <Ionicons name="search" size={22} color={!isDark ? color?.bg : color?.text} />
           </Pressable>
 
-          <Text numberOfLines={4} style={[styles.headerTitle, { color: "#fff", fontSize: 14, marginVertical: 0, marginTop: 8 }]}>"{verse?.text}"</Text>
-          <Text style={[styles.headerTitle, { color: !isDark ? color?.bg : color?.text, fontSize: 16, marginVertical: 0 }]}> ( {verse?.book}. {verse?.chapter}:{verse?.verse} )</Text>
+          <Text
+            numberOfLines={4}
+            style={[styles.headerTitle, { color: "#fff", fontSize: 14, marginVertical: 0, marginTop: 8 }]}
+          >"{capitalizeText(verse?.text || "")}"</Text>
+          <Text
+            onPress={() => router.push({ pathname: '/(baiboly)/book-reading', params: { bookId: verse?.book_number, chapterId: verse?.chapter, startVerse: verse?.verse } })}
+            style={[styles.headerTitle, { color: isDark ? color?.bg : color?.text, backgroundColor: `${isDark ? color?.text : color?.bg}`, fontSize: 16, marginVertical: 0, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 20 }]}
+          > {verse?.book}. {verse?.chapter}:{verse?.verse} </Text>
         </View>
         <Image style={{ width: "100%", height: "100%" }} resizeMode="cover" source={images[(image?.image_index || 0) - 1]} />
       </View>
@@ -69,10 +112,11 @@ export default function BookIndex() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ dark: "#004455", light: "#00ccff" }}
+      headerBackgroundColor={{ dark: color?.bg as string, light: color?.text as string }}
       headerImage={renderHeader()}
       bg={color?.bg}
     >
+      {/* Bible */}
       <View style={[styles.flexRow, { justifyContent: 'center', width: '100%' }]}>
         <Pressable
           style={[styles.bookCard, {
@@ -113,13 +157,59 @@ export default function BookIndex() {
         </Pressable>
       </View>
 
-      <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 30 }]}>
+      {/* STATS */}
+      <View style={[styles.flexRow, { justifyContent: "center", width: "100%", gap: "2%" }]}>
+        {stats.map((item, index) => (
+          <Pressable
+            onPress={() => router.push(item.route as RelativePathString)}
+            key={index}
+            style={[styles.bookCard, styles.statCard, { backgroundColor: isDark ? item.darkBg : item.lightBg, },]}
+          >
+            <Text style={[styles.bookTitle, { color: isDark ? item.darkText : item.lightText, fontSize: 30, textAlign: "center", },]} >
+              {item.value}
+            </Text>
+
+            <Text style={[styles.bookTitle, { color: isDark ? item.darkLabel : item.lightLabel, textAlign: "left", fontSize: 12, },]} >
+              {item.label}
+            </Text>
+
+            {item.icon !== 'archive' ? <Ionicons
+              name={item.icon as any}
+              size={20}
+              color={isDark ? item.darkText : item.lightText}
+              style={{ position: "absolute", top: '25%', right: 10 }}
+            /> : <Entypo
+              name={item.icon as any}
+              size={20}
+              color={isDark ? item.darkText : item.lightText}
+              style={{ position: "absolute", top: '25%', right: 10 }}
+            />}
+          </Pressable>
+        ))}
+      </View>
+
+      {/* PRAYER */}
+      <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 10 }]}>
+        <View style={{ borderRadius: 20, backgroundColor: isDark ? '#ffffff11' : '#00000011', paddingVertical: 12, paddingHorizontal: 18, position: "relative", overflow: "hidden" }}>
+          <MaterialCommunityIcons name="hands-pray" size={40} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, right: 10 }} />
+          <MaterialCommunityIcons name="hands-pray" size={40} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, left: 10 }} />
+          <View style={[styles.flexCol,]}>
+            <Text style={[styles.bookTitle, { color: color?.text, fontSize: 20, textAlign: "center" }]}>{prayer?.title}</Text>
+            <ThemedText style={[styles.text, { textAlign: "center" }]}>"{prayer?.text}"</ThemedText>
+            <Text style={[styles.modalText, { color: `${color?.text}df`, fontWeight: "400", marginTop: 10 }]}>{getInfo(langues?.bibleLng || 'mg').prayerText}</Text>
+          </View>
+        </View>
+
+      </View>
+
+      {/* LAST READ */}
+      <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 10 }]}>
         <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%" }]}>
           <Text style={[styles.modalText, { color: color?.text }]}>{infoText.lastReadText}</Text>
           <Ionicons name='reader-outline' size={22} color={color?.text} />
         </View>
         <View style={[styles.flexRow, { flexWrap: "wrap" }]}>
-          {lastReads.slice(0, 8).map((last, i) => {
+          {lastReads.length > 0 && lastReads.slice(0, 8).map((last, i) => {
             const book = getBookById(last.book_number, books)?.short_name;
             const text = last.verse ? `${book}. ${last.chapter} : ${last.verse}` : `${book}. ${last.chapter}`
             const start = parseVerse(last.verse as string)[0];
@@ -140,6 +230,12 @@ export default function BookIndex() {
               </TouchableOpacity>
             )
           })}
+
+          {lastReads.length === 0 && (
+            <ThemedText style={[styles.text, { textAlign: "center", marginVertical: 10, width: "100%" }]}>
+              {infoText.noLastReadText}
+            </ThemedText>
+          )}
         </View>
       </View>
 
@@ -204,4 +300,10 @@ export const styles = StyleSheet.create({
   infoAuthor: { fontSize: 13, textAlign: "center", },
   infoCopyright: { fontSize: 12, textAlign: "center", },
   infoSlogan: { fontSize: 13, textAlign: "center", marginTop: 4, fontStyle: "italic", },
+
+  date: { fontWeight: '400', fontSize: 14, },
+
+  statCard: { borderColor: "transparent", alignItems: "flex-start", gap: 3, padding: 10, borderRadius: 15, width: "32%", position: 'relative' },
+
+  text: { fontWeight: 'normal', fontSize: 16, lineHeight: 24, },
 })

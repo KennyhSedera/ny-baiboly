@@ -6,6 +6,7 @@ import { ThemedView } from '@/components/themed-view'
 import { getTranslation } from '@/constants/text'
 import { useApp } from '@/contexts/app.context'
 import { formatDateHeure } from '@/utils/date.utils'
+import { capitalizeText } from '@/utils/text.util'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
@@ -63,7 +64,7 @@ const NoteViewer = () => {
       >
         <Ionicons onPress={() => router.back()} name="chevron-back" size={26} color={color?.text} />
         <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, fontWeight: '400', fontSize: 16 }]}>
-          {formatDateHeure(data?.created_at || new Date())}
+          {capitalizeText(formatDateHeure(data?.created_at || new Date()))}
         </Text>
       </View>
       <ScrollView

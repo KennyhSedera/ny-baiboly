@@ -18,7 +18,7 @@ export const mg: Translation = {
       {
         value: "system",
         title: "Araka ny finday",
-        icon: "phone-portrait",
+        icon: "phone-portrait-outline",
       },
     ],
   },
@@ -183,7 +183,7 @@ export const fr: Translation = {
       {
         value: "system",
         title: "Système",
-        icon: "phone-portrait",
+        icon: "phone-portrait-outline",
       },
     ],
   },
@@ -295,7 +295,7 @@ export const fr: Translation = {
 
   // Archives
   archiveText: "Archive",
-  archivesText: "Archives",
+  archivesText: "Mes archives",
   addArchiveText: "Archiver",
   removeArchiveText: "Désarchiver",
   noArchiveText: "Aucune archive",
@@ -348,7 +348,7 @@ export const en: Translation = {
       {
         value: "system",
         title: "System",
-        icon: "phone-portrait",
+        icon: "phone-portrait-outline",
       },
     ],
   },
@@ -459,7 +459,7 @@ export const en: Translation = {
 
   // Archives
   archiveText: "Archive",
-  archivesText: "Archives",
+  archivesText: "My archives",
   addArchiveText: "Archive",
   removeArchiveText: "Remove from archive",
   noArchiveText: "No archives",
@@ -520,6 +520,9 @@ export function getInfo(language: Language) {
         contactText: 'Fifandraisana',
         lastReadText: 'Novakiana farany',
         lastSearchText: 'Notadiavina farany',
+        prayerText: 'Vavaka anio',
+        noInternetText: 'Tsy misy Internet.',
+        noLastReadText: 'Tsy mbola nisy novakiana.',
       };
 
     case 'fr':
@@ -535,7 +538,10 @@ export function getInfo(language: Language) {
         copyright: 'Tous droits réservés.',
         lastReadText: 'Dernières lectures',
         lastSearchText: 'Dernières recherches',
-        contactText: 'Contact'
+        contactText: 'Contact',
+        prayerText: 'Prière aujourd’hui',
+        noInternetText: 'Pas de connexion Internet.',
+        noLastReadText: 'Vous n’avez aucune lecture recente.',
       };
 
     case 'en':
@@ -551,7 +557,10 @@ export function getInfo(language: Language) {
         copyright: 'All rights reserved.',
         lastReadText: 'Recently read',
         lastSearchText: 'Recent searches',
-        contactText: 'Contact'
+        contactText: 'Contact',
+        prayerText: 'Prayer today',
+        noInternetText: 'No Internet connection.',
+        noLastReadText: 'You have no recent readings.',
       };
   }
 }

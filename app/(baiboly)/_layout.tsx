@@ -13,6 +13,8 @@ const BaibolyLayout = () => {
       <Stack.Screen name="book-chapter-verse" options={{ headerShown: false }} />
       <Stack.Screen name="note-input" options={{ headerShown: false }} />
       <Stack.Screen name="note-viewer" options={{ headerShown: false }} />
+      <Stack.Screen name="verse-archived" options={{ headerShown: false }} />
+      <Stack.Screen name="verse-favoris" options={{ headerShown: false }} />
     </Stack>
   )
 }

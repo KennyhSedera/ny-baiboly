@@ -3,25 +3,13 @@ import { getDB } from "./database";
 export type LangType = 'mg' | 'fr' | 'en';
 
 export interface LangueType {
-  id: number;
-  appLng: LangType;
-  bibleLng: LangType;
-  created_at: string;
-}
-
-export interface CreateLangueType {
+  id?: number;
   appLng: LangType;
   bibleLng: LangType;
   created_at?: string;
 }
 
-export interface UpdateLangueType {
-  id: number;
-  appLng: LangType;
-  bibleLng: LangType;
-}
-
-export async function createLangue(params: CreateLangueType) {
+export async function createLangue(params: LangueType) {
   const db = await getDB();
 
   const result = await db.runAsync(
@@ -46,7 +34,7 @@ export async function getLangues(): Promise<LangueType[]> {
   return await db.getAllAsync<LangueType>(` SELECT * FROM langues `);
 }
 
-export async function updateLangue(params: UpdateLangueType) {
+export async function updateLangue(params: LangueType) {
   const db = await getDB();
   const result = await db.runAsync(
     `
@@ -60,7 +48,7 @@ export async function updateLangue(params: UpdateLangueType) {
     params.appLng,
     params.bibleLng,
     new Date().toISOString(),
-    params.id
+    params?.id ?? 0
   )
   return result.lastInsertRowId;
 }

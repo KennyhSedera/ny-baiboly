@@ -16,13 +16,18 @@ export function searchVerses(query: string, allVerses: versesBible[], bookId?: n
   });
 }
 
-export const capitalizeText = (text: string) => {
+export const capitalizeText = (text: string): string => {
+  if (!text) return "";
 
-  if (Number(text.charAt(0))) {
-    return text.replace(text.charAt(1), text.charAt(1).toLocaleUpperCase());
-  }
-  return text.replace(text.charAt(0), text.charAt(0).toLocaleUpperCase());
-}
+  const match = text.match(/^\d+\s*/);
+  const startIndex = match ? match[0].length : 0;
+
+  return (
+    text.slice(0, startIndex) +
+    text.charAt(startIndex).toLocaleUpperCase() +
+    text.slice(startIndex + 1)
+  );
+};
 
 export const getLanguage = (lng: LangType) => {
   return lng === "fr" ? fr : lng === "en" ? en : mg
@@ -39,4 +44,12 @@ export function parseVerse(value: string): [number | undefined, number | undefin
   const end = parts[1] ? Number(parts[1]) : undefined;
 
   return [start, end];
+}
+
+export function convertVersesToArrayNumber(value: string): number[] {
+  const verseNumbers = value
+    ? value.split(",").map(v => Number(v.trim()))
+    : [];
+
+  return verseNumbers
 }
