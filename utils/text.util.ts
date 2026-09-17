@@ -48,7 +48,7 @@ export function parseVerse(value: string): [number | undefined, number | undefin
 
 export function convertVersesToArrayNumber(value: string): number[] {
   const verseNumbers = value
-    ? value.split(",").map(v => Number(v.trim()))
+    ? value.split(",").map(v => Number(v.trim())).sort((a, b) => a - b)
     : [];
 
   return verseNumbers

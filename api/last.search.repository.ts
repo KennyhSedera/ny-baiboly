@@ -31,7 +31,6 @@ export async function updateLastSearch(id: number) {
     console.log(error);
     return { success: false };
   }
-
 }
 
 export async function removeLastSearch(id: number) {

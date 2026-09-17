@@ -1,22 +1,22 @@
 import * as noteDB from '@/api/notes.repository'
-import AppModal from '@/components/modal'
+import DeleteConfirm from '@/components/delete-confirm'
 import { SegmentsViewer } from '@/components/segments-viewer'
-import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
 import { getTranslation } from '@/constants/text'
 import { useApp } from '@/contexts/app.context'
+import { verseBible } from '@/types/bible'
 import { formatDateHeure } from '@/utils/date.utils'
-import { capitalizeText } from '@/utils/text.util'
+import { capitalizeText, convertVersesToArrayNumber } from '@/utils/text.util'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Pressable, ScrollView, Text, ToastAndroid, View } from 'react-native'
 import { styles } from '../(tabs)'
 import { Note } from './../../api/notes.repository'
 
 const NoteViewer = () => {
-  const { color, langues } = useApp();
+  const { color, langues, noteVerses, books, getNoteVerses, removeNoteVerse } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -24,6 +24,7 @@ const NoteViewer = () => {
 
   const [data, setData] = useState<Note | null>(null);
   const [open, setOpen] = useState(false);
+  const [verseText, setVerseText] = useState<verseBible[]>([]);
 
   async function fetchNote() {
     if (id) {
@@ -35,17 +36,43 @@ const NoteViewer = () => {
     }
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchNote();
-    }, []),
-  );
+  useFocusEffect(useCallback(() => { fetchNote(); }, []),);
+
+  async function getVerseNote() {
+    if (id) { await getNoteVerses(Number(id)); }
+  }
+
+  useEffect(() => {
+    getVerseNote();
+  }, [id]);
+
+  function fetchVerseNote() {
+    if (noteVerses) {
+      const text = noteVerses
+        .map((noteVerse) => ({
+          id: noteVerse.id,
+          book_number: noteVerse.book_number || 0,
+          chapter: noteVerse.chapter || 0,
+          verse: convertVersesToArrayNumber(noteVerse.verse || '')[0],
+          text: noteVerse.verse || '',
+        }));
+
+      setVerseText(text);
+    } else {
+      setVerseText([]);
+    }
+  }
+
+  useEffect(() => {
+    fetchVerseNote()
+  }, [noteVerses]);
 
   function handleClose() {
     setOpen(false);
   }
 
-  async function deleteNote() {
+  async function deleteNote(reason: string) {
+    if (reason === 'cancel') return handleClose();
     if (!data) return handleClose();
     if (data.id) {
       const res = await noteDB.deleteNote(data.id);
@@ -54,6 +81,13 @@ const NoteViewer = () => {
         router.back();
         ToastAndroid.show("Note supprimer avec succès.", ToastAndroid.SHORT)
       }
+    }
+  }
+
+  function handleReading(v: verseBible) {
+    const array = convertVersesToArrayNumber(v.text);
+    if (verseText.length > 0) {
+      router.push({ pathname: `/book-reading`, params: { bookId: v.book_number, chapterId: v.chapter, startVerse: array[0], endVerse: array[array.length - 1] } });
     }
   }
 
@@ -67,38 +101,43 @@ const NoteViewer = () => {
           {capitalizeText(formatDateHeure(data?.created_at || new Date()))}
         </Text>
       </View>
+
       <ScrollView
         style={styles.container}
         contentContainerStyle={[styles.scrollContent, {}]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.bookTitle, { color: color?.text, marginBottom: 20, fontSize: 24, textAlign: 'left' }]}>{data?.title || 'Pas de titre'}</Text>
-        <SegmentsViewer content={data?.content as string} />
 
+        <View style={[styles.flexRow, { marginBottom: 20, gap: 4, flexWrap: 'wrap' }]}>
+          {verseText.map((verse, index) => {
+            const verseT = convertVersesToArrayNumber(verse.text);
+            const bookName = books?.find((book) => book.book_number === verse.book_number)?.short_name
+            return (
+              <Text
+                key={index}
+                onPress={() => handleReading(verse)}
+                onLongPress={() => { removeNoteVerse(verse.id as number); getVerseNote(); }}
+                style={{ padding: 4, paddingHorizontal: 10, borderRadius: 20, backgroundColor: color?.text + '30', color: color?.text, fontSize: 12 }}
+              >
+                {bookName}. {verse.chapter} : {verseT[0]}{verseT.length > 1 && ` - ${verseT[verseT.length - 1]}`}
+              </Text>
+            )
+          })}
+        </View>
+
+        <SegmentsViewer content={data?.content as string} />
       </ScrollView>
+
       <Pressable onPress={() => router.push({ pathname: '/note-input', params: { id: data?.id } })} style={[styles.buttonFlotting, { backgroundColor: color?.bg, bottom: 120, right: 30, width: 50, height: 50 }]}>
         <MaterialIcons name='edit-document' size={22} color={color?.text} />
       </Pressable>
+
       <Pressable onPress={() => setOpen(true)} style={[styles.buttonFlotting, { backgroundColor: color?.bg, bottom: 60, right: 30, width: 50, height: 50 }]}>
         <Ionicons name='trash-outline' size={22} color={'red'} />
       </Pressable>
 
-      <AppModal visible={open} position='center' onClose={handleClose} closeOnBackdrop={false} color={color?.bg}>
-        <View>
-          <Text style={[styles.bookTitle, { fontSize: 24, color: color?.text }]}>{t.deleteNoteText}</Text>
-          <ThemedText style={{ fontSize: 14, textAlign: "center", marginVertical: 20 }}>
-            {t.confirmDeleteText}
-          </ThemedText>
-          <View style={[styles.flexRow, { justifyContent: "flex-end", gap: 20 }]}>
-            <Pressable onPress={handleClose} style={[styles.button, { borderWidth: 0 }]}>
-              <ThemedText style={[styles.buttonTitle]}>{t.cancelText}</ThemedText>
-            </Pressable>
-            <Pressable onPress={deleteNote} style={[styles.button, { backgroundColor: "red", borderWidth: 0 }]}>
-              <Text style={[styles.buttonTitle, { color: "white" }]}>{t.deleteText}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+      <DeleteConfirm visible={open} deleteTitle={t.deleteNoteText} onClose={deleteNote} />
     </ThemedView>
   );
 }

@@ -48,9 +48,8 @@ const ScreenBooks = () => {
 
       <View style={[styles.header, { flexDirection: "column", backgroundColor: color?.bg, paddingBottom: 16 },]}>
         <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%", paddingVertical: 8, marginBottom: 8 }]}>
-
           <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, }]}>{info.description}</Text>
-          <Ionicons name="information-circle" size={24} color={color?.text} />
+          <Ionicons onPress={() => router.push("/app-search-global")} name="search-circle" size={30} color={color?.text} />
         </View>
         <View style={styles.flexRow}>
           <Pressable

@@ -2,6 +2,7 @@ import { Language, Translation } from "@/types/text.type";
 
 export const mg: Translation = {
   infoText: 'Mombamomba',
+  selectText: "Safidiana",
   theme: {
     title: "Hazavana",
     data: [
@@ -24,8 +25,8 @@ export const mg: Translation = {
   },
 
   langue: {
-    title: "Fitenin'ny Baiboly",
-    titleApp: "Fiteny amin'ny ankapobeany",
+    title: "Baiboly",
+    titleApp: "Ankapobeany",
     data: [
       { value: "mg", title: "Malagasy", flag: '🇲🇬' },
       { value: "fr", title: "Frantsay", flag: '🇫🇷' },
@@ -167,6 +168,7 @@ export const mg: Translation = {
 
 export const fr: Translation = {
   infoText: 'Info',
+  selectText: "Sélectionner",
   theme: {
     title: "Thème",
     data: [
@@ -189,8 +191,8 @@ export const fr: Translation = {
   },
 
   langue: {
-    title: "Langue de la Bible",
-    titleApp: "Langue de l'application",
+    title: "Bible",
+    titleApp: "Application",
     data: [
       { value: "mg", title: "Malgache", flag: '🇲🇬' },
       { value: "fr", title: "Français", flag: '🇫🇷' },
@@ -332,6 +334,7 @@ export const fr: Translation = {
 
 export const en: Translation = {
   infoText: 'Info',
+  selectText: "Select",
   theme: {
     title: "Theme",
     data: [
@@ -354,8 +357,8 @@ export const en: Translation = {
   },
 
   langue: {
-    title: "Bible language",
-    titleApp: "App language",
+    title: "Bible",
+    titleApp: "App",
     data: [
       { value: "mg", title: "Malagasy", flag: '🇲🇬' },
       { value: "fr", title: "French", flag: '🇫🇷' },
@@ -509,7 +512,7 @@ export function getInfo(language: Language) {
     case 'mg':
       return {
         title: 'Momba ny rindranasa',
-        appName: 'NY BAIBOLY MALAGASY, 1865',
+        appName: 'Ny Baiboly Malagasy, 1865',
         description:
           'Rindranasa natao hamakiana sy hianarana ny Baiboly.',
         version: 'Dika',
@@ -528,7 +531,7 @@ export function getInfo(language: Language) {
     case 'fr':
       return {
         title: "A propos de l’application",
-        appName: 'NY BAIBOLY MALAGASY, 1865',
+        appName: 'Le Bible de l\'Épée',
         description:
           'Application conçue pour lire et étudier la Bible.',
         version: 'Version',
@@ -547,7 +550,7 @@ export function getInfo(language: Language) {
     case 'en':
       return {
         title: 'About the application',
-        appName: 'NY BAIBOLY MALAGASY, 1865',
+        appName: 'The Bible of the Epiphany',
         description:
           'An application designed for reading and studying the Bible.',
         version: 'Version',

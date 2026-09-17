@@ -1,4 +1,5 @@
 import * as noteDB from '@/api/notes.repository'
+import DeleteConfirm from '@/components/delete-confirm'
 import AppModal from '@/components/modal'
 import { ThemedText } from '@/components/themed-text'
 import { ThemedView } from '@/components/themed-view'
@@ -8,7 +9,6 @@ import { adjustColor } from '@/utils/color.util'
 import { formatDateHeure } from '@/utils/date.utils'
 import { extractPreviewText } from '@/utils/note-content.utils'
 import { capitalizeText } from '@/utils/text.util'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { useFocusEffect, useRouter } from 'expo-router'
@@ -58,7 +58,8 @@ export default function MyNote() {
     setSelectedNote(null)
   }
 
-  async function deleteNote() {
+  async function deleteNote(v: string) {
+    if (v === 'cancel') return handleClose();
     if (!selectedNote) return handleClose();
     if (selectedNote) {
       const res = await noteDB.deleteNote(selectedNote.id);
@@ -80,7 +81,7 @@ export default function MyNote() {
       key={key}
       onPress={() => router.push({ pathname: '/note-viewer', params: { id: n.id } })}
       onLongPress={() => handleLongPress(n)}
-      style={[styles.bookCard, { width: "100%", borderWidth: 0, backgroundColor: `${color?.bg}60`, gap: 10 }]}
+      style={[styles.bookCard, { width: "100%", borderWidth: 0, backgroundColor: `${color?.bg}${isDark ? 96 : 50}`, gap: 10 }]}
     >
       <Text numberOfLines={2} style={[styles.bookTitle, { color: color?.text, textAlign: 'left' }]}>{n.title || 'Pas de titre'}</Text>
       <ThemedText numberOfLines={4}>{extractPreviewText(n?.content || "")}</ThemedText>
@@ -92,10 +93,10 @@ export default function MyNote() {
     <ThemedView style={{ flex: 1, position: 'relative' }}>
       <View style={[styles.header, { backgroundColor: color?.bg }]}>
         <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, }]}>{t.noteText}</Text>
-        <Ionicons name="search" size={24} color={color?.text} />
+        <Ionicons onPress={() => router.push("/app-search-global")} name="search-circle" size={30} color={color?.text} />
       </View>
 
-      <Pressable onPress={() => router.push('/note-input')} style={[styles.buttonFlotting, { backgroundColor: color?.text, bottom: 85, right: 10 }]}>
+      <Pressable onPress={() => router.push('/note-input')} style={[styles.buttonFlotting, { backgroundColor: color?.text, bottom: 90, right: 10 }]}>
         <Ionicons name='add' size={32} color={color?.bg} />
       </Pressable>
 
@@ -112,26 +113,11 @@ export default function MyNote() {
 
       {notes.length === 0 && (
         <View style={[styles.flexCol, { marginTop: 40 }]}>
-          <MaterialCommunityIcons name="file-document-remove-outline" size={60} color={color?.text} />
+          <Ionicons name="document-text" size={60} color={color?.text} />
           <Text style={[styles.modalText, { color: color?.text, textAlign: "center" }]}>{t.noteEmptyText}</Text></View>
       )}
 
-      <AppModal visible={open} position='center' onClose={handleClose} closeOnBackdrop={false} color={color?.bg}>
-        <View>
-          <Text style={[styles.bookTitle, { fontSize: 24, color: color?.text }]}>{t.deleteNoteText}</Text>
-          <ThemedText style={{ fontSize: 14, textAlign: "center", marginVertical: 20 }}>
-            {t.confirmDeleteText}
-          </ThemedText>
-          <View style={[styles.flexRow, { justifyContent: "flex-end", gap: 20 }]}>
-            <Pressable onPress={handleClose} style={[styles.button, { borderWidth: 0 }]}>
-              <ThemedText style={[styles.buttonTitle]}>{t.cancelText}</ThemedText>
-            </Pressable>
-            <Pressable onPress={deleteNote} style={[styles.button, { backgroundColor: "red", borderWidth: 0 }]}>
-              <Text style={[styles.buttonTitle, { color: "white" }]}>{t.deleteText}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </AppModal>
+      <DeleteConfirm visible={open} deleteTitle={t.deleteNoteText} onClose={deleteNote} />
 
       <AppModal visible={openMenu} position='bottom' onClose={handleCloseMenu} color={color?.bg}>
         <TouchableOpacity

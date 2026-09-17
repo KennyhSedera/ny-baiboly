@@ -31,5 +31,16 @@ export async function removeLastRead(id: number) {
     console.log(error);
     return { success: false };
   }
+}
 
+export async function updateLastRead(id: number) {
+  const db = await getDB();
+
+  try {
+    await db.runAsync(`UPDATE last_read SET created_at=? WHERE id=?`, new Date().toISOString(), id);
+    return { success: true };
+  } catch (error) {
+    console.log(error);
+    return { success: false };
+  }
 }

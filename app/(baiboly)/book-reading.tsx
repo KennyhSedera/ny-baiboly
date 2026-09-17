@@ -1,5 +1,7 @@
 import { getArchiveByChapter } from '@/api/archives.repository';
+import { Note } from '@/api/notes.repository';
 import AppModal from '@/components/modal';
+import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { VerseText } from '@/components/verse-text';
 import { getTranslation } from '@/constants/text';
@@ -16,12 +18,13 @@ import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
 import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, TextInput, ToastAndroid, View } from 'react-native';
+import Animated, { FadeInDown, FadeOutDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { styles } from '../(tabs)';
 
 export default function BookReading() {
   const { bookId, chapterId, startVerse, endVerse, } = useLocalSearchParams();
-  const { settingRead, updateSettingRead, isDark, books, verses, langues, addNewArchive, addNewFavorite } = useApp();
+  const { settingRead, isDark, books, verses, langues, color, notes, updateSettingRead, addNewArchive, addNewFavorite, addNewNoteVerse } = useApp();
   const language = getTranslation(langues?.appLng || "mg");
   const { prev, next } = getPrevAndNextChapter(Number(bookId), Number(chapterId), books, verses);
   const router = useRouter()
@@ -34,20 +37,35 @@ export default function BookReading() {
   const [data, setData] = useState<readingVersesBible>();
   const [all, setAll] = useState(false);
   const [search, setSearch] = useState('');
+  const [searchNote, setNoteSearch] = useState('');
   const [onSearch, setOnSearch] = useState(false);
   const [copied, setCopied] = useState(false);
   const [archived, setArchived] = useState(false);
   const [favorited, setFavorited] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const [fontSize, setFontSize] = React.useState(settingRead?.fontSize || 16);
   const [textAlign, setTextAlign] = React.useState<TextAlign>(settingRead?.textAlign || 'left');
   const [modalVisible, setModalVisible] = useState(false);
   const [titeFormat, settiteFormat] = useState<"row" | "col">(settingRead?.titeFormat || 'row');
   const [selectedVerse, setSelectedVerse] = useState<number[]>([]);
   const [archives, setArchives] = useState<number[]>([]);
+  const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
 
   useEffect(() => {
     setAll((startVerse === undefined && endVerse === undefined) ? true : false)
-  }, [endVerse, startVerse])
+  }, [endVerse, startVerse]);
+
+  const filteredNotes = useMemo(() => {
+    if (notes.length === 0) return [];
+    if (searchNote.length === 0) return notes;
+    if (searchNote.length > 0) {
+      return notes.filter((note) => {
+        const title = note?.title ?? '';
+        return title.toLowerCase().includes(searchNote.toLowerCase());
+      });
+    }
+    return notes;
+  }, [notes, searchNote]);
 
   useEffect(() => {
     if (search.length > 0) {
@@ -183,14 +201,17 @@ export default function BookReading() {
     await Clipboard.setStringAsync(text);
 
     setCopied(true);
-    setTimeout(() => { setCopied(false); setSelectedVerse([]); }, 3000);
+    setTimeout(() => { setCopied(false); }, 3000);
+    setTimeout(() => { setSelectedVerse([]); }, 4000);
+
   };
 
   const handleArchive = async () => {
     const data = { book_number: Number(bookId), chapter: Number(chapterId), verses: selectedVerse.toLocaleString() }
     addNewArchive(data);
     setArchived(true);
-    setTimeout(() => { setArchived(false); setSelectedVerse([]); }, 3000);
+    setTimeout(() => { setArchived(false); }, 3000);
+    setTimeout(() => { setSelectedVerse([]); }, 4000);
 
     fetchArchives();
   }
@@ -199,9 +220,40 @@ export default function BookReading() {
     const data = { book_number: Number(bookId), chapter: Number(chapterId), verse: selectedVerse.toLocaleString() }
     addNewFavorite(data);
     setFavorited(true);
-    setTimeout(() => { setFavorited(false); setSelectedVerse([]); }, 3000);
+    setTimeout(() => { setFavorited(false); }, 3000);
+    setTimeout(() => { setSelectedVerse([]); }, 4000);
   }
 
+  async function handleSelectNote(note: Note) {
+    if (!selectedNotes.includes(note)) {
+      setSelectedNotes([...selectedNotes, note]);
+    } else {
+      setSelectedNotes(selectedNotes.filter((item) => item.id !== note.id));
+    }
+  }
+
+  const handleAddVerseNote = async () => {
+    try {
+      const start = convertVersesToArrayNumber(selectedVerse.toLocaleString())[0];
+      const end = convertVersesToArrayNumber(selectedVerse.toLocaleString())[selectedVerse.length - 1];
+
+      const data = selectedNotes.map((item) => ({
+        note_id: item.id,
+        book_number: Number(bookId),
+        chapter: Number(chapterId),
+        verse: start === end ? start.toLocaleString() : `${start}-${end}`,
+      }));
+
+      await Promise.all(data.map((item) => addNewNoteVerse(item)));
+
+      setShowNote(false);
+      setSelectedNotes([]);
+      setSelectedVerse([]);
+    } catch (err) {
+      console.warn('[handleAddVerseNote] Échec de l\'ajout de note(s) sur le(s) verset(s) :', err);
+      ToastAndroid.show('Une erreur est survenue lors de l\'ajout de note(s) sur le(s) verset(s).', ToastAndroid.LONG);
+    }
+  };
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.header, { backgroundColor: book?.book_color, borderColor: adjustColor(book?.book_color || "#FFF", -30) }]}>
@@ -247,13 +299,67 @@ export default function BookReading() {
         </View>
       </View>
 
-      {selectedVerse.length > 0 && (<View style={[styles.buttonFlotting, styles.flexCol, { width: "auto", height: "auto", bottom: 90, right: 10, backgroundColor: `${book?.book_color}ef`, padding: 10, paddingVertical: 15, gap: 12 }]}>
-        <Ionicons onPress={copyToClipboard} name={copied ? "checkmark" : "copy-outline"} size={22} color={"#fff"} />
-        <Ionicons onPress={handleFavorite} name={favorited ? "checkmark" : "heart"} size={26} color={"#fff"} />
-        <Entypo onPress={handleArchive} name={archived ? "check" : "archive"} size={26} color={"#fff"} />
-        <Ionicons name="document-text-outline" size={26} color={"#fff"} />
-        <Ionicons name="close" size={26} color={"#fff"} onPress={() => setSelectedVerse([])} />
-      </View>)}
+      {selectedVerse.length > 0 && (
+        <Animated.View
+          entering={FadeInDown.duration(150)}
+          exiting={FadeOutDown.duration(200).delay(250)}
+          layout={LinearTransition.springify().damping(15)}
+          style={[
+            styles.buttonFlotting,
+            styles.flexCol,
+            {
+              width: "auto",
+              height: "auto",
+              bottom: 90,
+              right: 10,
+              backgroundColor: `${book?.book_color}ef`,
+              padding: 10,
+              paddingVertical: 15,
+              gap: 12,
+              overflow: "hidden",
+            },
+          ]}
+        >
+          <Animated.View
+            entering={FadeInDown.delay(0).duration(200).springify().damping(15)}
+            exiting={FadeOutUp.delay(200).duration(150)}
+          >
+            <Ionicons onPress={copyToClipboard} name={copied ? "checkmark" : "copy-outline"} size={22} color={"#fff"} />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(50).duration(200).springify().damping(15)}
+            exiting={FadeOutUp.delay(150).duration(150)}
+          >
+            <Ionicons onPress={handleFavorite} name={favorited ? "checkmark" : "heart"} size={26} color={"#fff"} />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(100).duration(200).springify().damping(15)}
+            exiting={FadeOutUp.delay(100).duration(150)}
+          >
+            {!archived ? (
+              <Entypo onPress={handleArchive} name={"archive"} size={26} color={"#fff"} />
+            ) : (
+              <Ionicons name={"checkmark"} size={26} color={"#fff"} />
+            )}
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(150).duration(200).springify().damping(15)}
+            exiting={FadeOutUp.delay(50).duration(150)}
+          >
+            <Ionicons onPress={() => setShowNote(true)} name="document-text-outline" size={26} color={"#fff"} />
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInDown.delay(200).duration(200).springify().damping(15)}
+            exiting={FadeOutUp.delay(0).duration(150)}
+          >
+            <Ionicons name="close" size={26} color={"#fff"} onPress={() => setSelectedVerse([])} />
+          </Animated.View>
+        </Animated.View>
+      )}
 
       <ScrollView
         ref={scrollViewRef}
@@ -417,6 +523,48 @@ export default function BookReading() {
           <Pressable onPress={() => { setModalVisible(false); handleUpdateSetting() }} style={[styles.showAllButton, { backgroundColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20) + "65", borderColor: "#fff", marginBottom: 0 }]}>
             <Text style={[styles.showAllButtonText, { color: "#fff" }]}>{language.settingRead.buttonText}</Text>
           </Pressable>
+        </View>
+      </AppModal>
+
+      <AppModal visible={showNote} onClose={() => setShowNote(false)} closeOnBackdrop={true} position="center">
+        <View>
+          <Text style={[styles.modalTitle, { color: color?.text, fontSize: 18 }]}>{language.selectText} {language.notesText}</Text>
+
+          <TextInput
+            value={searchNote}
+            placeholder={`${language.searchText} ...`}
+            placeholderTextColor={`${color?.text}80`}
+            onChangeText={(e) => setNoteSearch(e.trim())}
+            style={[{ backgroundColor: color?.text + "30", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, marginBottom: 10, }]}
+          />
+
+          {filteredNotes.length > 0 && filteredNotes.map((n, i) => {
+            const isSelected = selectedNotes.includes(n);
+            return (
+              <Pressable key={i} onPress={() => handleSelectNote(n)} style={[styles.item, { backgroundColor: color?.bg + "40", borderRadius: 10, justifyContent: "space-between" }]}>
+                <ThemedText numberOfLines={1}>{n.title}</ThemedText>
+                <Ionicons name={isSelected ? "radio-button-on" : "radio-button-off"} size={20} color={color?.text} />
+              </Pressable>
+            )
+          })}
+
+          {selectedNotes.length > 0 && (
+            <Pressable onPress={() => handleAddVerseNote()} style={[styles.button, { backgroundColor: color?.bg, borderColor: color?.bg, justifyContent: "center" }]}>
+              <Text style={[styles.showAllButtonText, { color: color?.text, }]}>{language.addText}</Text>
+            </Pressable>
+          )}
+
+          {filteredNotes.length === 0 && searchNote.length > 0 && (
+            <ThemedText style={[styles.item, { textAlign: "center" }]}>{language.noteTitleText}</ThemedText>
+          )}
+
+          {filteredNotes.length === 0 && searchNote.length === 0 && (
+            <View style={[styles.flexRow, { gap: 10 }]}>
+              <Pressable onPress={() => setShowNote(false)} style={[styles.item, { backgroundColor: color?.bg + "40", borderRadius: 10, justifyContent: "center" }]}>
+                <ThemedText >{language.addNoteText}</ThemedText>
+              </Pressable>
+            </View>
+          )}
         </View>
       </AppModal>
     </ThemedView>

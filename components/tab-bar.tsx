@@ -24,7 +24,7 @@ export default function TabBar({ state, navigation, }: BottomTabBarProps) {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? "#000000af" : "#ffffffb6" }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? "#000000c5" : "#ffffffcc" }]}>
       <View style={[styles.tabContainer, { backgroundColor: color?.bg, borderColor: `${color?.borderColor}50`, },]} >
         {state.routes.map((route, index) => {
           const tab = routesMapRecord.find(

@@ -6,6 +6,7 @@ import * as imagesDB from '@/api/image.repository';
 import { createLangue, getLangues, LangueType, updateLangue } from '@/api/langues.repository';
 import * as lastReadDB from '@/api/last.read.repository';
 import * as lastSearchDB from '@/api/last.search.repository';
+import * as noteVerseDB from '@/api/note.verse.repository';
 import * as notesDB from '@/api/notes.repository';
 import * as settingDB from '@/api/setting.read.repository';
 import { Setting } from '@/api/setting.read.repository';
@@ -60,6 +61,7 @@ interface AppContextValue {
   favorites: favoritesDB.Favorite[];
   archives: archivesDB.Archive[];
   prayer: { title: string, text: string } | null;
+  noteVerses: noteVerseDB.NoteVerse[];
 
   setTheme: (theme: Theme) => void
   getColor: () => void;
@@ -87,6 +89,7 @@ interface AppContextValue {
 
   addNewLastRead: (data: lastReadDB.LastRead) => void;
   removeLastRead: (id: number) => void;
+  updateLastRead: (id: number) => void;
 
   addNewLastSearch: (data: lastSearchDB.LastSearch) => void;
   removeLastSearch: (id: number) => void;
@@ -97,6 +100,10 @@ interface AppContextValue {
 
   addNewArchive: (data: archivesDB.Archive) => void;
   removeArchive: (id: number) => void;
+
+  getNoteVerses: (id: number) => void;
+  addNewNoteVerse: (data: noteVerseDB.NoteVerse) => void;
+  removeNoteVerse: (id: number) => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -123,6 +130,7 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
   const [archives, setArchives] = useState<archivesDB.Archive[]>([]);
   const [notes, setNotes] = useState<notesDB.Note[]>([]);
   const [prayer, setPrayer] = useState<{ title: string, text: string } | null>(null);
+  const [noteVerses, setNoteVerse] = useState<noteVerseDB.NoteVerse[]>([]);
 
   const { isDark, setTheme, theme, resolvedTheme } = useTheme();
 
@@ -400,6 +408,17 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     [getLastRead]
   );
 
+  const updateLastRead = useCallback(
+    async (id: number) => {
+      try {
+        await lastReadDB.updateLastRead(id);
+        await getLastRead();
+      } catch (error) {
+        console.error("Erreur: ", error);
+      }
+    }, [],
+  )
+
   // Last search
   const getLastSearch = useCallback(
     async () => {
@@ -572,6 +591,72 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     }, []
   );
 
+  const addNewNote = useCallback(
+    async (data: notesDB.Note) => {
+      try {
+        await notesDB.createNote(data);
+        await getNotes();
+      } catch (err) {
+        console.error('Erreur SQLite (addNewNote):', err);
+        setError(err as Error);
+      }
+    },
+    [getNotes]
+  );
+
+  const removeNote = useCallback(
+    async (id: number) => {
+      try {
+        await notesDB.deleteNote(id);
+        await getNotes();
+      } catch (err) {
+        console.error('Erreur SQLite (removeNote):', err);
+        setError(err as Error);
+      }
+    },
+    [getNotes]
+  );
+
+  // Notes versets
+  const getNoteVerses = useCallback(
+    async (noteId: number) => {
+      try {
+        const res = await noteVerseDB.getAllNoteVerseByNote(noteId);
+        setNoteVerse(res);
+        return res;
+      } catch (err) {
+        console.error('Erreur SQLite (getNoteVerses):', err);
+        setError(err as Error);
+      }
+    }, []
+  )
+
+  const addNewNoteVerse = useCallback(
+    async (data: noteVerseDB.NoteVerse) => {
+      try {
+        const res = await noteVerseDB.createNoteVerse(data);
+        await getNotes();
+      } catch (err) {
+        console.error('Erreur SQLite (addNewNoteVerse):', err);
+        setError(err as Error);
+      }
+    },
+    [getNotes]
+  );
+
+  const removeNoteVerse = useCallback(
+    async (id: number) => {
+      try {
+        await noteVerseDB.removeNoteVerse(id);
+        await getNotes();
+      } catch (err) {
+        console.error('Erreur SQLite (removeNoteVerse):', err);
+        setError(err as Error);
+      }
+    },
+    [getNotes]
+  );
+
   // Prière
   const getPrayers = useCallback(
     (langue: LangueType) => {
@@ -647,7 +732,6 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     appColors: getAppColors(),
     theme,
     resolvedTheme,
-
     color,
     image,
     settingRead,
@@ -661,30 +745,42 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     favorites,
     archives,
     prayer,
+    noteVerses,
 
     setTheme,
     getColor: getColors,
     createColor,
     updateColor,
     deleteColor,
+
     getImages,
     createImages,
     updateImages,
     deleteImages,
+
     getSettingRead,
     createSettingRead,
     updateSettingRead,
     deleteSettingRead,
     updateLangue: updateLng,
+
     addNewLastRead,
     removeLastRead,
+    updateLastRead,
+
     addNewLastSearch,
     removeLastSearch,
     updateLastSearch,
+
     addNewFavorite,
     removeFavorite,
+
     addNewArchive,
-    removeArchive
+    removeArchive,
+
+    addNewNoteVerse,
+    removeNoteVerse,
+    getNoteVerses,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -23,6 +23,7 @@
       "favicon": "./assets/images/baiboly4.png"
     },
     "plugins": [
+      "./plugins/withForceDarkDisabled.ts",
       "expo-router",
       [
         "expo-splash-screen",

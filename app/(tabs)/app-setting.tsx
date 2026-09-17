@@ -6,6 +6,7 @@ import { Colors } from '@/types/colors.type';
 import { adjustColor } from '@/utils/color.util';
 import { images } from '@/utils/image.util';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { styles } from '.';
@@ -14,6 +15,7 @@ export default function AppSetting() {
   const { color, updateColor, image, updateImages, isDark, setTheme, theme, appColors, langues, updateLangue } = useApp();
   const [language, setLanguage] = useState(getTranslation(langues?.appLng || "mg"));
   const info = getInfo(langues?.appLng || 'mg');
+  const appName = getInfo(langues?.bibleLng || "mg").appName;
   const imageSelected = image;
 
   const editColor = (selectedColor: Colors, index: number) => {
@@ -79,8 +81,9 @@ export default function AppSetting() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
-      <View style={[styles.header, { backgroundColor: color?.bg, justifyContent: 'flex-start', gap: 12 }]}>
+      <View style={[styles.header, { backgroundColor: color?.bg, justifyContent: 'space-between', gap: 12 }]}>
         <Text style={[styles.headerTitle, { color: color?.text, fontSize: 24 }]}>{language.settingText}</Text>
+        <Ionicons onPress={() => router.push("/app-search-global")} name="search-circle" size={30} color={color?.text} />
       </View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.scrollContent, { paddingBottom: 50 }]} showsVerticalScrollIndicator={false}>
 
@@ -103,41 +106,82 @@ export default function AppSetting() {
           </View>
         </View>
 
-        {/* Langue bible */}
+        {/* Langue  */}
         <View style={[styles.flexCol, { marginBottom: 30 }]}>
           <View style={[styles.flexRow, { justifyContent: 'space-between', width: '100%', paddingHorizontal: 10 }]}>
-            <Text style={[styles.modalText, { color: color?.text }]}>{language.langue.title}</Text>
-            <Ionicons name="language" size={26} color={color?.text} />
+            <View style={[styles.flexRow, { justifyContent: 'space-between', width: "46%", }]}>
+              <Text style={[styles.modalText, { color: color?.text }]}>{language.langue.titleApp}</Text>
+              <Ionicons name="language" size={20} color={color?.text} />
+            </View>
+            <View style={[styles.flexRow, { justifyContent: 'space-between', width: "46%", }]}>
+              <Text style={[styles.modalText, { color: color?.text }]}>{language.langue.title}</Text>
+              <Ionicons name="text" size={20} color={color?.text} />
+            </View>
           </View>
-          <View style={[styles.flexRow, { justifyContent: 'center', width: '100%', flexWrap: 'wrap', gap: 10 }]}>
-            {language.langue.data.map((i, index) => {
-              const isSelected = langues?.bibleLng === i.value;
-              return (
-                <Pressable key={index} style={[styles.bookCard, { backgroundColor: !isSelected ? `${color?.text}20` : color?.text, width: '30%', alignItems: 'center', borderWidth: 0 }]} onPress={() => editLanguage(i.value, "bible")}>
-                  <Text style={{ fontSize: 25 }}>{i.flag}</Text>
-                  <Text style={[styles.bookTitle, { color: !isSelected ? color?.text : color?.bg, fontSize: 12 }]}>{i.title} </Text>
-                </Pressable>
-              )
-            })}
-          </View>
-        </View>
 
-        {/* Langue app */}
-        <View style={[styles.flexCol, { marginBottom: 30 }]}>
-          <View style={[styles.flexRow, { justifyContent: 'space-between', width: '100%', paddingHorizontal: 10 }]}>
-            <Text style={[styles.modalText, { color: color?.text }]}>{language.langue.titleApp}</Text>
-            <Ionicons name="text" size={26} color={color?.text} />
-          </View>
-          <View style={[styles.flexRow, { justifyContent: 'center', width: '100%', flexWrap: 'wrap', gap: 10 }]}>
-            {language.langue.data.map((i, index) => {
-              const isSelected = langues?.appLng === i.value;
-              return (
-                <Pressable key={index} style={[styles.bookCard, { backgroundColor: !isSelected ? `${color?.text}20` : color?.text, width: '30%', alignItems: 'center', borderWidth: 0 }]} onPress={() => editLanguage(i.value, "app")}>
-                  <Text style={{ fontSize: 25 }}>{i.flag}</Text>
-                  <Text style={[styles.bookTitle, { color: !isSelected ? color?.text : color?.bg, fontSize: 12 }]}>{i.title}</Text>
-                </Pressable>
-              )
-            })}
+          <View style={[styles.flexRow, { width: '100%', gap: '2%' }]}>
+            <View style={[styles.flexCol, { width: '48%', gap: 8, padding: 8, borderWidth: 1, borderColor: `${color?.borderColor}80`, backgroundColor: `${color?.text}20`, borderRadius: 14 }]}>
+              {language.langue.data.map((i, index) => {
+                const isSelected = langues?.appLng === i.value;
+                return (
+                  <Pressable
+                    key={index}
+                    onPress={() => editLanguage(i.value, "app")}
+                    style={[
+                      styles.flexRow,
+                      {
+                        width: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 12,
+                        paddingHorizontal: 14,
+                        borderRadius: 14,
+                        backgroundColor: !isSelected ? `${color?.text}00` : color?.text,
+                      },
+                    ]}
+                  >
+                    <View style={[styles.flexRow, { alignItems: 'center', gap: 12 }]}>
+                      <Text style={{ fontSize: 22 }}>{i.flag}</Text>
+                      <Text style={[styles.bookTitle, { color: !isSelected ? color?.text : color?.bg, fontSize: 15 }]}>
+                        {i.title}
+                      </Text>
+                    </View>
+                    <Ionicons name={isSelected ? "radio-button-on" : "radio-button-off"} size={20} color={isSelected ? color?.bg : color?.text} />
+                  </Pressable>
+                );
+              })}
+            </View>
+            <View style={[styles.flexCol, { width: '48%', gap: 8, padding: 8, borderWidth: 1, borderColor: `${color?.borderColor}80`, backgroundColor: `${color?.text}20`, borderRadius: 14 }]}>
+              {language.langue.data.map((i, index) => {
+                const isSelected = langues?.bibleLng === i.value;
+                return (
+                  <Pressable
+                    key={index}
+                    onPress={() => editLanguage(i.value, "bible")}
+                    style={[
+                      styles.flexRow,
+                      {
+                        width: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 12,
+                        paddingHorizontal: 14,
+                        borderRadius: 14,
+                        backgroundColor: !isSelected ? `${color?.text}00` : color?.text,
+                      },
+                    ]}
+                  >
+                    <View style={[styles.flexRow, { alignItems: 'center', gap: 12 }]}>
+                      <Text style={{ fontSize: 22 }}>{i.flag}</Text>
+                      <Text style={[styles.bookTitle, { color: !isSelected ? color?.text : color?.bg, fontSize: 15 }]}>
+                        {i.title}
+                      </Text>
+                    </View>
+                    <Ionicons name={isSelected ? "radio-button-on" : "radio-button-off"} size={20} color={isSelected ? color?.bg : color?.text} />
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
         </View>
 
@@ -223,10 +267,10 @@ export default function AppSetting() {
             <Text style={[styles.modalText, { color: color?.text }]}>{info.title}</Text>
             <Ionicons name="information-circle-sharp" size={26} color={color?.text} />
           </View>
-          <View style={[styles.bookCard, styles.flexCol, { width: "100%", borderWidth: 0, backgroundColor: `${color?.text}10`, padding: 20, gap: 2 }]}>
-            <Image source={require('@/assets/images/baiboly2.png')} style={{ width: 60, height: 60, borderRadius: 10 }} />
+          <View style={[styles.bookCard, styles.flexCol, { width: "100%", borderWidth: 0, padding: 20, gap: 2 }]}>
+            <Image source={isDark ? require('@/assets/images/baiboly3.png') : require('@/assets/images/baiboly4.png')} resizeMode="cover" style={{ width: 100, height: 80, borderRadius: 10, backgroundColor: color?.bg }} />
             <Text style={[{ color: color?.text, marginBottom: 15 }]}>{info.version}: 1.0.0</Text>
-            <Text style={[{ color: color?.text, fontSize: 18, }]}>{info.appName}</Text>
+            <Text style={[{ color: color?.text, fontSize: 22, fontWeight: 'bold', marginBottom: 15 }]}>{appName}</Text>
             <Text style={[{ color: color?.text }]}>{info.description}</Text>
             <Text style={[{ color: color?.text }]}>{info.developer}: Kennyh Sedera</Text>
             <Text style={[{ color: color?.text, marginTop: 15 }]}>{info.copyright}</Text>

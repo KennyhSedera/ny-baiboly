@@ -134,6 +134,7 @@ export interface infoBible {
 }
 
 export interface verseBible {
+  id?: number,
   book_number: number,
   chapter: number,
   verse: number,

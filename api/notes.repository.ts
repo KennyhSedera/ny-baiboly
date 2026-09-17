@@ -1,47 +1,31 @@
 import { getDB } from './database';
 
 export interface Note {
-  id: number;
-  book_number: number | null;
-  chapter: number | null;
-  verse: string | null;
-  text: string | null;
-  title: string | null;
-  content: string | null;
-  created_at: string;
+  id?: number;
+  title?: string | null;
+  content?: string | null;
+  created_at?: string;
 }
 
 // CREATE
-export async function createNote(data: {
-  book_number?: number | null;
-  chapter?: number | null;
-  verse?: number;
-  text?: string | null;
-  title?: string;
-  content?: string;
-}) {
+export async function createNote(data: Note) {
   const db = await getDB();
   const result = await db.runAsync(
     `
     INSERT INTO notes (
-      book_number,
-      chapter,
-      verse,
-      text,
       title,
       content,
       created_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?)
     `,
-    data.book_number ?? null,
-    data.chapter ?? null,
-    data.verse ?? null,
-    data.text ?? null,
     data.title ?? null,
     data.content ?? null,
     new Date().toISOString()
   );
+
+  console.log("Créer avec succès.");
+
 
   return result.lastInsertRowId;
 }
@@ -83,25 +67,6 @@ export async function getNoteById(
   );
 }
 
-// READ NOTES D'UN VERSET
-export async function getNotesByVerse(
-  bookNumber: number,
-  chapter: number,
-  verse: string
-): Promise<Note[]> {
-  const db = await getDB();
-  return await db.getAllAsync<Note>(
-    `
-    SELECT *
-    FROM notes
-    WHERE id = ?
-    ORDER BY created_at DESC
-    `,
-    bookNumber,
-    chapter,
-    verse
-  );
-}
 
 // UPDATE
 export async function updateNote(
@@ -117,12 +82,10 @@ export async function updateNote(
     `
     UPDATE notes
     SET
-      text = ?,
       title = ?,
       content = ?
     WHERE id = ?
     `,
-    data.text ?? null,
     data.title ?? null,
     data.content ?? null,
     id

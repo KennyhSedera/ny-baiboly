@@ -172,7 +172,7 @@ export default function NoteInput() {
             value={title}
             onChangeText={handleChangeTitle}
             placeholderTextColor={`${color?.text}96`}
-            style={[{ backgroundColor: `${color?.bg}60`, paddingHorizontal: 12, height: 50, borderRadius: 10, fontSize: 16, color: color?.text, borderWidth: 1, borderColor: color?.text, fontWeight: 'bold' }]}
+            style={[{ backgroundColor: `${color?.bg}60`, paddingHorizontal: 12, height: 50, borderRadius: 10, fontSize: 16, color: color?.text, borderWidth: 1, borderColor: `${color?.text}50`, fontWeight: 'bold' }]}
             multiline
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
@@ -184,7 +184,7 @@ export default function NoteInput() {
           </Text>
         </View>
 
-        <View style={{ marginHorizontal: 14, flex: 1, borderWidth: 1, borderColor: color?.borderColor, padding: 10, borderRadius: 10, backgroundColor: `${color?.bg}05`, marginBottom: 20, }}>
+        <View style={{ marginHorizontal: 14, flex: 1, borderWidth: 1, borderColor: `${color?.borderColor}50`, padding: 10, borderRadius: 10, backgroundColor: `${color?.bg}05`, marginBottom: 20, }}>
           <RichText style={{ backgroundColor: "transparent", padding: 20, height: "auto" }} editor={editor} />
         </View>
 

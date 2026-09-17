@@ -1,25 +1,34 @@
+import { Archive } from '@/api/archives.repository';
+import { Favorite } from '@/api/favories.repository';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
+import { VerseText } from '@/components/verse-text';
 import { getInfo, getTranslation } from '@/constants/text';
 import { useApp } from '@/contexts/app.context';
-import { verseRandom } from '@/types/bible';
-import { getBookById, getOneVerse, info } from '@/utils/bible.util';
+import { verseBible, verseRandom } from '@/types/bible';
+import { getBookById, getOneVerse, getVerseByChapterId } from '@/utils/bible.util';
+import { formatDateHeure } from '@/utils/date.utils';
 import { images } from '@/utils/image.util';
-import { capitalizeText, parseVerse } from '@/utils/text.util';
-import { Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
+import { capitalizeText, convertVersesToArrayNumber, parseVerse } from '@/utils/text.util';
+import { Entypo, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { RelativePathString, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function BookIndex() {
-  const { color, image, isDark, books, verses, langues, lastReads, newTestament, oldTestament, notes, archives, favorites, prayer, removeLastRead, } = useApp();
+  const { color, image, isDark, books, verses, langues, lastReads, newTestament, oldTestament, notes, archives, favorites, prayer, removeLastRead, updateLastRead } = useApp();
   const router = useRouter();
   const [verse, setVerse] = React.useState<verseRandom>();
   const [language, setLanguage] = useState(getTranslation(langues?.appLng || "mg"));
+  const [archive, setArchive] = useState<verseBible[] | undefined>(undefined);
+  const [favorite, setFavorite] = useState<verseBible[] | undefined>(undefined);
+  const [archiveItem, setArchiveItem] = useState<Archive | undefined>(undefined);
+  const [favoriteItem, setFavoriteItem] = useState<Favorite | undefined>(undefined);
 
   const l = getTranslation(langues?.bibleLng || "mg");
   const infoText = getInfo(langues?.appLng || "mg");
+  const appName = getInfo(langues?.bibleLng || "mg").appName;
 
   const get = useCallback(
     () => {
@@ -81,9 +90,9 @@ export default function BookIndex() {
   const renderHeader = () => {
     return (
       <View style={{ width: "100%", height: "100%", position: "relative" }}>
-        <View style={[styles.flexCol, styles.headerParallax, {}]}>
+        <View style={[styles.flexCol, styles.headerParallax, { justifyContent: 'center', paddingVertical: 0 }]}>
           <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%" }]}>
-            <Text style={[styles.headerTitle, { color: !isDark ? color?.bg : color?.text, fontSize: 24 }]}>{info.description}</Text>
+            <Text style={[styles.headerTitle, { color: !isDark ? color?.bg : color?.text, fontSize: 24 }]}>{appName}</Text>
             <View style={styles.flexRow}>
               <Pressable>
                 <Ionicons name="information-circle" size={26} color={!isDark ? color?.bg : color?.text} />
@@ -98,21 +107,56 @@ export default function BookIndex() {
 
           <Text
             numberOfLines={4}
-            style={[styles.headerTitle, { color: "#fff", fontSize: 14, marginVertical: 0, marginTop: 8 }]}
-          >"{capitalizeText(verse?.text || "")}"</Text>
-          <Text
+            style={[styles.headerTitle, { color: "#fff", fontSize: 16, marginVertical: 0, marginTop: 8 }]}
+          >
+            {verse?.text && `"${capitalizeText(verse?.text || "")}"`}
+          </Text>
+          {verse?.book && <Text
             onPress={() => router.push({ pathname: '/(baiboly)/book-reading', params: { bookId: verse?.book_number, chapterId: verse?.chapter, startVerse: verse?.verse } })}
-            style={[styles.headerTitle, { color: isDark ? color?.bg : color?.text, backgroundColor: `${isDark ? color?.text : color?.bg}`, fontSize: 16, marginVertical: 0, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 20 }]}
-          > {verse?.book}. {verse?.chapter}:{verse?.verse} </Text>
+            style={[styles.headerTitle, { color: isDark ? color?.bg : color?.text, backgroundColor: `${isDark ? color?.text : color?.bg}`, fontSize: 12, marginVertical: 0, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 20 }]}
+          >
+            {`${verse?.book}. ${verse?.chapter} : ${verse?.verse}`}
+          </Text>}
         </View>
         <Image style={{ width: "100%", height: "100%" }} resizeMode="cover" source={images[(image?.image_index || 0) - 1]} />
       </View>
     );
   }
 
+  function getText(bookId: number, chapter: number, verseNumbers: number[]) {
+    const book = getVerseByChapterId(bookId, chapter, books, verses);
+    return book.verses.filter((v) => verseNumbers.includes(v.verse)).map((v) => v);
+  }
+
+  useEffect(() => {
+    if (!archives || archives.length === 0) return;
+    if (!books?.length || !verses?.length) return;
+
+    const archiveItem = archives[0];
+    const archive = archiveItem
+      ? getText(archiveItem.book_number, archiveItem.chapter, convertVersesToArrayNumber(archiveItem.verses as string))
+      : [];
+
+    setArchive(archive as verseBible[]);
+    setArchiveItem(archiveItem as Archive);
+  }, [archives, books, verses]);
+
+  useEffect(() => {
+    if (!favorites || favorites.length === 0) return;
+    if (!books?.length || !verses?.length) return;
+
+    const favoriteItem = favorites[0];
+    const favorite = favoriteItem
+      ? getText(favoriteItem.book_number, favoriteItem.chapter, convertVersesToArrayNumber(favoriteItem.verse as string))
+      : [];
+
+    setFavorite(favorite as verseBible[]);
+    setFavoriteItem(favoriteItem as Favorite);
+  }, [favorites, books, verses]);
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ dark: color?.bg as string, light: color?.text as string }}
+      headerBg={{ dark: "#000", light: "#fff" }}
       headerImage={renderHeader()}
       bg={color?.bg}
     >
@@ -191,8 +235,8 @@ export default function BookIndex() {
       {/* PRAYER */}
       <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 10 }]}>
         <View style={{ borderRadius: 20, backgroundColor: isDark ? '#ffffff11' : '#00000011', paddingVertical: 12, paddingHorizontal: 18, position: "relative", overflow: "hidden" }}>
-          <MaterialCommunityIcons name="hands-pray" size={40} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, right: 10 }} />
-          <MaterialCommunityIcons name="hands-pray" size={40} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, left: 10 }} />
+          <MaterialCommunityIcons name="hands-pray" size={30} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, right: 10 }} />
+          <MaterialCommunityIcons name="hands-pray" size={30} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, left: 10 }} />
           <View style={[styles.flexCol,]}>
             <Text style={[styles.bookTitle, { color: color?.text, fontSize: 20, textAlign: "center" }]}>{prayer?.title}</Text>
             <ThemedText style={[styles.text, { textAlign: "center" }]}>"{prayer?.text}"</ThemedText>
@@ -202,25 +246,61 @@ export default function BookIndex() {
 
       </View>
 
+      {/* Cards */}
+      <View style={[styles.flexRow, { justifyContent: "space-between", alignItems: "flex-start", width: "100%", gap: "2%" }]}>
+
+        {archive && archive.length > 0 && archiveItem && (
+          <Pressable onPress={() => router.push(`/verse-archived`)} style={[styles.bookCard, { backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, borderColor: `${color?.borderColor}40`, alignItems: "flex-start", position: "relative", padding: 8, }]}
+          >
+            <Text style={[styles.bookTitle, { color: color?.text, fontSize: 16, marginBottom: 8 }]}>{getBookById(archiveItem.book_number, books)?.long_name} {archiveItem.chapter} </Text>
+            <Text style={[styles.modalText, { color: color?.text }]} numberOfLines={10}>{
+              archive
+                .map((v) => (
+                  <VerseText onPress={() => router.push(`/verse-archived`)} text={v.text as string} verseNumber={v.verse} color={color?.text} key={v.verse} textAlign="auto" size={12} />
+                ))
+            }</Text>
+            <Text style={[styles.date, { color: color?.text, marginTop: 12, textAlign: "left", fontSize: 10, width: "100%" }]}>{capitalizeText(formatDateHeure(new Date(archiveItem.created_at as string)))}</Text>
+
+            <Entypo name="archive" size={20} color={color?.text} style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 6, borderRadius: 20 }} />
+          </Pressable>
+        )}
+
+        {favorite && favorite.length > 0 && favoriteItem && (
+          <Pressable onPress={() => router.push(`/verse-favoris`)} style={[styles.bookCard, { backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, borderColor: `${color?.borderColor}40`, alignItems: "flex-start", position: "relative", padding: 8 }]}
+          >
+            <Text style={[styles.bookTitle, { color: color?.text, fontSize: 16, marginBottom: 8 }]}>{getBookById(favoriteItem.book_number, books)?.long_name} {favoriteItem.chapter} </Text>
+            <Text style={[styles.modalText, { color: color?.text }]} numberOfLines={10}>{
+              favorite
+                .map((v) => (
+                  <VerseText onPress={() => router.push(`/verse-favoris`)} text={v.text as string} verseNumber={v.verse} color={color?.text} key={v.verse} textAlign="auto" size={12} />
+                ))
+            }</Text>
+            <Text style={[styles.date, { color: color?.text, marginTop: 12, textAlign: "left", fontSize: 10, width: "100%" }]}>{capitalizeText(formatDateHeure(new Date(favoriteItem.created_at as string)))}</Text>
+
+            <Ionicons name="heart" size={20} color={"#cc0000"} style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 6, borderRadius: 20 }} />
+          </Pressable>
+        )}
+
+      </View>
+
       {/* LAST READ */}
       <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 10 }]}>
         <View style={[styles.flexRow, { justifyContent: "space-between", width: "100%" }]}>
           <Text style={[styles.modalText, { color: color?.text }]}>{infoText.lastReadText}</Text>
-          <Ionicons name='reader-outline' size={22} color={color?.text} />
+          <FontAwesome6 name="book-open-reader" size={22} color={color?.text} />
         </View>
         <View style={[styles.flexRow, { flexWrap: "wrap" }]}>
           {lastReads.length > 0 && lastReads.slice(0, 8).map((last, i) => {
-            const book = getBookById(last.book_number, books)?.short_name;
+            const book = getBookById(last.book_number, books)?.long_name;
             const text = last.verse ? `${book}. ${last.chapter} : ${last.verse}` : `${book}. ${last.chapter}`
             const start = parseVerse(last.verse as string)[0];
             const end = parseVerse(last.verse as string)[1];
-
             const params = { bookId: last.book_number, chapterId: last.chapter, startVerse: start, endVerse: end }
 
             return (
               <TouchableOpacity
                 key={i}
-                onPress={() => router.push({ pathname: '/(baiboly)/book-reading', params })}
+                onPress={() => { router.push({ pathname: '/(baiboly)/book-reading', params }); updateLastRead(last.id as number); }}
                 onLongPress={() => removeLastRead(last.id as number)}
                 style={[{ backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 }]}
               >
@@ -306,4 +386,5 @@ export const styles = StyleSheet.create({
   statCard: { borderColor: "transparent", alignItems: "flex-start", gap: 3, padding: 10, borderRadius: 15, width: "32%", position: 'relative' },
 
   text: { fontWeight: 'normal', fontSize: 16, lineHeight: 24, },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, paddingHorizontal: 16, marginBottom: 8, },
 })

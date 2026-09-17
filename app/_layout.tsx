@@ -16,7 +16,8 @@ function AppContent() {
     <AppProvider>
       <StatusBar
         translucent
-        backgroundColor={'transparent'}
+        backgroundColor='transparent'
+        barStyle={colorScheme === 'light' ? 'dark-content' : 'light-content'}
       />
 
       <Stack

@@ -32,10 +32,6 @@ async function openAndInit(): Promise<SQLite.SQLiteDatabase> {
 
     CREATE TABLE IF NOT EXISTS notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      book_number INTEGER,
-      chapter INTEGER,
-      verse TEXT,
-      text TEXT,
       title TEXT,
       content TEXT,
       created_at TEXT NOT NULL
@@ -87,6 +83,15 @@ async function openAndInit(): Promise<SQLite.SQLiteDatabase> {
       verse INTEGER,
       text Text,
       search_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS note_verse (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      note_id INTEGER NOT NULL,
+      book_number INTEGER NOT NULL,
+      chapter INTEGER NOT NULL,
+      verse TEXT NOT NULL,
+      created_at TEXT NOT NULL
     );
 
   `);

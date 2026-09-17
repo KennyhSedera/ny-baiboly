@@ -9,6 +9,8 @@ export type TextAlign = "left" | "center" | "right" | "justify" | "auto";
 export interface Translation {
   infoText: string;
 
+  selectText: string;
+
   theme: {
     title: string;
     data: {
