@@ -6,7 +6,6 @@ import { verseRandom } from '@/types/bible';
 import { getSearch } from '@/utils/bible.util';
 import { adjustColor } from '@/utils/color.util';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -47,7 +46,7 @@ export default function AppSearchGlobal() {
         <Pressable onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={26} color={color?.text} />
         </Pressable>
-        <View style={[styles.flexRow, styles.searchInput, { justifyContent: "space-between", width: "80%", borderWidth: 1, borderColor: color?.borderColor, backgroundColor: `${color?.bg}96`, paddingVertical: 2, marginVertical: 8, borderRadius: 50 }]}>
+        <View style={[styles.flexRow, styles.searchInput, { justifyContent: "space-between", width: "80%", borderWidth: 1, borderColor: color?.borderColor, backgroundColor: `${color?.bg}96`, paddingVertical: 0, marginVertical: 8, borderRadius: 50 }]}>
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -55,9 +54,9 @@ export default function AppSearchGlobal() {
             placeholder={`${text.searchText} ...`}
             placeholderTextColor={adjustColor(color?.text ?? '', -20)}
           />
-          <Ionicons onPress={() => setSearch("")} name={search ? "close-circle" : "search"} size={22} color={color?.text} />
+          {search && <Ionicons onPress={() => setSearch("")} name="close" size={22} color={color?.text} />}
         </View>
-        <MaterialCommunityIcons name="filter-menu" size={24} color={color?.text} />
+        <Ionicons name="search" size={24} color={color?.text} />
       </View>
       <ScrollView
         style={{ flex: 1 }}

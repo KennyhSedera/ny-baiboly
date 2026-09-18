@@ -1,4 +1,6 @@
+import { useApp } from '@/contexts/app.context';
 import { TextAlign } from '@/types/text.type';
+import { Entypo, Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { ThemedText } from './themed-text';
@@ -7,6 +9,21 @@ type VerseSegment =
   | { type: 'section'; content: string }
   | { type: 'text'; content: string }
   | { type: 'note'; content: string };
+
+interface VerseTextProps {
+  text: string;
+  size?: number;
+  color?: string;
+  fontSize?: number;
+  highlight?: string;
+  verseNumber: number;
+  isSelected?: boolean;
+  isFavorite?: boolean;
+  isArchived?: boolean;
+  textAlign?: TextAlign;
+  onPress?: (verseNumber: number) => void;
+  onLongPress?: (verseNumber: number) => void;
+}
 
 function parseVerseText(text: string): VerseSegment[] {
   const regex = /<n>\{(.*?)\}<\/n>/g;
@@ -34,9 +51,9 @@ function parseVerseText(text: string): VerseSegment[] {
   return segments;
 }
 
-function renderHighlighted(content: string, highlight: string | undefined, key: string, color: string, fontSize: number, isSelected?: boolean) {
+function renderHighlighted(content: string, highlight: string | undefined, key: string, color: string, fontSize: number, isSelected?: boolean, isFavorite?: boolean, isArchived?: boolean, isDark?: boolean) {
   if (!highlight?.trim()) {
-    return <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4, }, isSelected && { textDecorationLine: 'underline' }]}>{content}</ThemedText>;
+    return <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4, }, isArchived && { color: isDark ? "#5db8f5" : "#1671b8" }, isFavorite && { color: isDark ? "#f55151" : "#9b0000" }, isFavorite && isArchived && { color: isDark ? "#c95a00" : "#ff7503" }, isSelected && { textDecorationLine: 'underline', color: isDark ? '#ffffff' : '#000000' }]}>{content}</ThemedText>;
   }
 
   const escaped = highlight.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -44,7 +61,7 @@ function renderHighlighted(content: string, highlight: string | undefined, key: 
   const parts = content.split(regex);
 
   return (
-    <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4, }, isSelected && { textDecorationLine: 'underline' }]}>
+    <ThemedText key={key} style={[styles.verseText, { fontSize, lineHeight: fontSize + 4, }, isArchived && { color: isDark ? "#5db8f5" : "#1671b8" }, isFavorite && { color: isDark ? "#f55151" : "#9b0000" }, isFavorite && isArchived && { color: isDark ? "#c95a00" : "#ff7503" }, isSelected && { textDecorationLine: 'underline', color: isDark ? '#ffffff' : '#000000' }]}>
       {parts.map((part, i) =>
         part.toLowerCase() === highlight.trim().toLowerCase() ? (
           <Text key={i} style={[styles.highlight, { backgroundColor: color, color: "#fff" }]}>{part}</Text>
@@ -57,27 +74,20 @@ function renderHighlighted(content: string, highlight: string | undefined, key: 
 }
 
 export function VerseText({
-  text,
-  verseNumber,
-  color = 'red',
-  highlight,
   size,
+  text,
+  color = '',
+  highlight,
   textAlign,
   isSelected,
-  onLongPress,
+  isFavorite,
+  isArchived,
+  verseNumber,
   onPress,
-}: {
-  text: string;
-  verseNumber: number;
-  color?: string;
-  highlight?: string;
-  size?: number;
-  textAlign: TextAlign;
-  isSelected?: boolean;
-  onLongPress?: (verse: number) => void;
-  onPress?: (verse: number) => void;
-}) {
+  onLongPress,
+}: VerseTextProps) {
   const segments = parseVerseText(text);
+  const { isDark } = useApp();
   const [fontSize, setFontSize] = React.useState(16);
 
   const section = segments.find((segment) => segment.type === 'section');
@@ -109,8 +119,8 @@ export function VerseText({
         </Text>
       )}
 
-      <Text style={[styles.verseText, { fontSize, lineHeight: fontSize + 4 }, isSelected && { fontWeight: 'bold', color: color }]}>
-        <Text style={[styles.verseNumber, { color }, isSelected && { color: color }]}>
+      <Text style={[styles.verseText, { fontSize, lineHeight: fontSize + 4 }, isArchived && { color: isDark ? "#5db8f5" : "#1671b8" }, isFavorite && { color: isDark ? "#f55151" : "#9b0000" }, isSelected && { fontWeight: 'bold', color: color }]}>
+        <Text style={[styles.verseNumber, { color: color }, isArchived && { color: isDark ? "#5db8f5" : "#1671b8" }, isFavorite && { color: isDark ? "#f55151" : "#9b0000" }, isFavorite && isArchived && { color: isDark ? "#c95a00" : "#ff7503" },]}>
           {' '}{verseNumber}{' '}
         </Text>
         {'  '}
@@ -123,8 +133,12 @@ export function VerseText({
             );
           }
 
-          return renderHighlighted(segment.content, highlight, String(index), color, fontSize, isSelected);
+          return renderHighlighted(segment.content, highlight, String(index), color, fontSize, isSelected, isFavorite, isArchived, isDark);
         })}
+        {'  '}
+        {isArchived && <Entypo name="archive" size={size} color={isDark ? "#5db8f5" : "#1671b8"} style={{ marginLeft: 40 }} />}
+        {isFavorite && isArchived && ' '}
+        {isFavorite && <Ionicons name="heart" size={size} color={isDark ? "#f55151" : "#9b0000"} style={{ marginLeft: 40 }} />}
       </Text>
     </Text>
   );

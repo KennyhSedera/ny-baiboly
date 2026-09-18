@@ -16,7 +16,7 @@ import { bookBible, verseBible } from '@/types/bible';
 import { Colors } from '@/types/colors.type';
 import { bookEn, versesEn } from '@/utils/bible.en.util';
 import { bookFr, versesFr } from '@/utils/bible.fr.util';
-import { books as booksMg, verses as versesMg } from '@/utils/bible.util';
+import { books as booksMg, verses as versesMg, versesToRangeString } from '@/utils/bible.util';
 import { appColors } from '@/utils/color.util';
 import * as Localization from 'expo-localization';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState, } from 'react';
@@ -97,13 +97,17 @@ interface AppContextValue {
 
   addNewFavorite: (data: favoritesDB.Favorite) => void;
   removeFavorite: (id: number) => void;
+  replaceFavoritesForChapter: (bookId: number, chapterId: number, verseNumbers: number[]) => Promise<void>;
 
   addNewArchive: (data: archivesDB.Archive) => void;
   removeArchive: (id: number) => void;
+  replaceArchivesForChapter: (bookId: number, chapterId: number, verseNumbers: number[]) => Promise<void>;
 
   getNoteVerses: (id: number) => void;
   addNewNoteVerse: (data: noteVerseDB.NoteVerse) => void;
   removeNoteVerse: (id: number) => void;
+
+
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -525,6 +529,15 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     [getFavorites]
   );
 
+  async function replaceFavoritesForChapter(bookId: number, chapterId: number, verseNumbers: number[]) {
+    await favoritesDB.deleteFavoritesByChapter(bookId, chapterId);
+    if (verseNumbers.length > 0) {
+      await addNewFavorite({ book_number: bookId, chapter: chapterId, verse: versesToRangeString(verseNumbers) });
+    } else {
+      await getFavorites();
+    }
+  }
+
   // Archives
   const getArchives = useCallback(
     async () => {
@@ -577,6 +590,15 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
     },
     [getArchives]
   );
+
+  async function replaceArchivesForChapter(bookId: number, chapterId: number, verseNumbers: number[]) {
+    await archivesDB.deleteArchivesByChapter(bookId, chapterId);
+    if (verseNumbers.length > 0) {
+      await addNewArchive({ book_number: bookId, chapter: chapterId, verses: versesToRangeString(verseNumbers) });
+    } else {
+      await getArchives();
+    }
+  }
 
   // Notes
   const getNotes = useCallback(
@@ -774,9 +796,11 @@ export function AppProvider({ children, fallback }: AppProviderProps) {
 
     addNewFavorite,
     removeFavorite,
+    replaceFavoritesForChapter,
 
     addNewArchive,
     removeArchive,
+    replaceArchivesForChapter,
 
     addNewNoteVerse,
     removeNoteVerse,

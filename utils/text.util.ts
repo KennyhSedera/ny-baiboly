@@ -47,9 +47,31 @@ export function parseVerse(value: string): [number | undefined, number | undefin
 }
 
 export function convertVersesToArrayNumber(value: string): number[] {
-  const verseNumbers = value
-    ? value.split(",").map(v => Number(v.trim())).sort((a, b) => a - b)
-    : [];
+  if (!value) return [];
 
-  return verseNumbers
+  const verseNumbers = value
+    .split(",")
+    .flatMap((part) => {
+      const trimmed = part.trim();
+
+      if (trimmed.includes("-")) {
+        const [startStr, endStr] = trimmed.split("-").map((v) => v.trim());
+        const start = Number(startStr);
+        const end = Number(endStr);
+
+        if (Number.isNaN(start) || Number.isNaN(end)) return [];
+
+        const range: number[] = [];
+        for (let i = start; i <= end; i++) {
+          range.push(i);
+        }
+        return range;
+      }
+
+      const num = Number(trimmed);
+      return Number.isNaN(num) ? [] : [num];
+    })
+    .sort((a, b) => a - b);
+
+  return [...new Set(verseNumbers)];
 }

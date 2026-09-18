@@ -33,7 +33,7 @@ export default function MyNote() {
       const datas = data.filter(n => n.title !== "" || n.content !== "");
       const dataEmpty = data.filter(n => n.title === "" && n.content === "");
       if (dataEmpty.length > 0) {
-        dataEmpty.map(n => noteDB.deleteNote(n.id))
+        dataEmpty.map(n => noteDB.deleteNote(n.id || 0));
       }
       setNotes(datas);
     }
@@ -62,7 +62,7 @@ export default function MyNote() {
     if (v === 'cancel') return handleClose();
     if (!selectedNote) return handleClose();
     if (selectedNote) {
-      const res = await noteDB.deleteNote(selectedNote.id);
+      const res = await noteDB.deleteNote(selectedNote.id || 0);
       if (res.success) {
         handleClose();
         fetchNotes();
@@ -85,7 +85,7 @@ export default function MyNote() {
     >
       <Text numberOfLines={2} style={[styles.bookTitle, { color: color?.text, textAlign: 'left' }]}>{n.title || 'Pas de titre'}</Text>
       <ThemedText numberOfLines={4}>{extractPreviewText(n?.content || "")}</ThemedText>
-      <Text style={{ color: adjustColor(color?.bg || "", isDark ? 30 : -20) }}>{capitalizeText(formatDateHeure(new Date(n.created_at)))}</Text>
+      <Text style={{ color: adjustColor(color?.bg || "", isDark ? 30 : -20), fontSize: 12 }}>{capitalizeText(formatDateHeure(new Date(n.created_at || "")))}</Text>
     </TouchableOpacity>
   );
 

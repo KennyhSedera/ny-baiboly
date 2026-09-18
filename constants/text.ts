@@ -7,14 +7,14 @@ export const mg: Translation = {
     title: "Hazavana",
     data: [
       {
-        value: "dark",
-        title: "Maizina",
-        icon: "moon",
-      },
-      {
         value: "light",
         title: "Mazava",
         icon: "sunny",
+      },
+      {
+        value: "dark",
+        title: "Maizina",
+        icon: "moon-outline",
       },
       {
         value: "system",
@@ -173,14 +173,14 @@ export const fr: Translation = {
     title: "Thème",
     data: [
       {
-        value: "dark",
-        title: "Sombre",
-        icon: "moon",
-      },
-      {
         value: "light",
         title: "Clair",
         icon: "sunny",
+      },
+      {
+        value: "dark",
+        title: "Sombre",
+        icon: "moon-outline",
       },
       {
         value: "system",
@@ -339,14 +339,14 @@ export const en: Translation = {
     title: "Theme",
     data: [
       {
-        value: "dark",
-        title: "Dark",
-        icon: "moon",
-      },
-      {
         value: "light",
         title: "Light",
         icon: "sunny",
+      },
+      {
+        value: "dark",
+        title: "Dark",
+        icon: "moon-outline",
       },
       {
         value: "system",

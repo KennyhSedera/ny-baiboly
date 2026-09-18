@@ -269,3 +269,22 @@ export function wrapTextAroundWord(
 
   return `${prefix}${snippet}${suffix}`;
 }
+
+// utilitaire à ajouter dans bible.util ou text.util
+export function versesToRangeString(verseNumbers: number[]): string {
+  const sorted = [...new Set(verseNumbers)].sort((a, b) => a - b);
+  const ranges: string[] = [];
+  let start = sorted[0];
+  let end = sorted[0];
+
+  for (let i = 1; i <= sorted.length; i++) {
+    if (sorted[i] === end + 1) {
+      end = sorted[i];
+    } else {
+      ranges.push(start === end ? `${start}` : `${start}-${end}`);
+      start = sorted[i];
+      end = sorted[i];
+    }
+  }
+  return ranges.join(',');
+}

@@ -1,4 +1,5 @@
 import { getArchiveByChapter } from '@/api/archives.repository';
+import { getFavoriteByChapter } from '@/api/favories.repository';
 import { Note } from '@/api/notes.repository';
 import AppModal from '@/components/modal';
 import { ThemedText } from '@/components/themed-text';
@@ -23,7 +24,7 @@ import { styles } from '../(tabs)';
 
 export default function BookReading() {
   const { bookId, chapterId, startVerse, endVerse, } = useLocalSearchParams();
-  const { settingRead, isDark, books, verses, langues, color, notes, updateSettingRead, addNewArchive, addNewFavorite, addNewNoteVerse } = useApp();
+  const { settingRead, books, verses, langues, color, notes, updateSettingRead, replaceArchivesForChapter, replaceFavoritesForChapter, addNewNoteVerse, } = useApp();
   const language = getTranslation(langues?.appLng || "mg");
   const info = getInfo(langues?.bibleLng || "mg");
   const { prev, next } = getPrevAndNextChapter(Number(bookId), Number(chapterId), books, verses);
@@ -49,6 +50,7 @@ export default function BookReading() {
   const [titeFormat, settiteFormat] = useState<"row" | "col">(settingRead?.titeFormat || 'row');
   const [selectedVerse, setSelectedVerse] = useState<number[]>([]);
   const [archives, setArchives] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
 
   useEffect(() => {
@@ -146,6 +148,7 @@ export default function BookReading() {
 
   useEffect(() => {
     fetchArchives();
+    fetchFavorites();
   }, [bookId, chapterId]);
 
   async function fetchArchives() {
@@ -160,6 +163,21 @@ export default function BookReading() {
       );
 
       setArchives(numbers);
+    }
+  }
+
+  async function fetchFavorites() {
+    const res = await getFavoriteByChapter(
+      Number(bookId),
+      Number(chapterId)
+    );
+
+    if (res) {
+      const numbers = res.flatMap((item) =>
+        convertVersesToArrayNumber(item.verse as string)
+      );
+
+      setFavorites(numbers);
     }
   }
 
@@ -183,7 +201,6 @@ export default function BookReading() {
   }
 
   function handleSelected(v: number) {
-    if (archives.includes(v)) return;
     setSelectedVerse([...(selectedVerse || []), v]);
   }
 
@@ -207,21 +224,37 @@ export default function BookReading() {
   };
 
   const handleArchive = async () => {
-    const data = { book_number: Number(bookId), chapter: Number(chapterId), verses: selectedVerse.toLocaleString() }
-    addNewArchive(data);
-    setArchived(true);
-    setTimeout(() => { setArchived(false); }, 3000);
-    setTimeout(() => { setSelectedVerse([]); }, 4000);
+    const currentSet = new Set(archives);
+    const allSelected = selectedVerse.every((v) => currentSet.has(v));
 
+    if (allSelected) {
+      selectedVerse.forEach((v) => currentSet.delete(v));
+    } else {
+      selectedVerse.forEach((v) => currentSet.add(v));
+    }
+
+    await replaceArchivesForChapter(Number(bookId), Number(chapterId), [...currentSet]);
+    setArchived(true);
+    setTimeout(() => setArchived(false), 3000);
+    setTimeout(() => setSelectedVerse([]), 4000);
     fetchArchives();
-  }
+  };
 
   async function handleFavorite() {
-    const data = { book_number: Number(bookId), chapter: Number(chapterId), verse: selectedVerse.toLocaleString() }
-    addNewFavorite(data);
+    const currentSet = new Set(favorites);
+    const allSelected = selectedVerse.every((v) => currentSet.has(v));
+
+    if (allSelected) {
+      selectedVerse.forEach((v) => currentSet.delete(v));
+    } else {
+      selectedVerse.forEach((v) => currentSet.add(v));
+    }
+
+    await replaceFavoritesForChapter(Number(bookId), Number(chapterId), [...currentSet]);
     setFavorited(true);
-    setTimeout(() => { setFavorited(false); }, 3000);
-    setTimeout(() => { setSelectedVerse([]); }, 4000);
+    setTimeout(() => setFavorited(false), 3000);
+    setTimeout(() => setSelectedVerse([]), 4000);
+    fetchFavorites();
   }
 
   async function handleSelectNote(note: Note) {
@@ -254,6 +287,7 @@ export default function BookReading() {
       ToastAndroid.show('Une erreur est survenue lors de l\'ajout de note(s) sur le(s) verset(s).', ToastAndroid.LONG);
     }
   };
+
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.header, { backgroundColor: color?.bg, borderColor: color?.text }]}>
@@ -353,8 +387,8 @@ export default function BookReading() {
 
       <ScrollView
         ref={scrollViewRef}
-        style={styles.container}
-        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 10, paddingBottom: 80 }]}
+        style={[styles.container]}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: 10, paddingBottom: 10 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.flexRow, { justifyContent: "center", marginBottom: 8 }]}>
@@ -381,7 +415,9 @@ export default function BookReading() {
               textAlign={textAlign}
               onLongPress={handleSelected}
               onPress={handleVersePress}
-              isSelected={archives.includes(verse.verse) || selectedVerse?.includes(verse.verse)}
+              isSelected={selectedVerse?.includes(verse.verse)}
+              isFavorite={favorites.includes(verse.verse)}
+              isArchived={archives.includes(verse.verse)}
             />
           </View>
         ))}

@@ -2,7 +2,7 @@ export type Language = "mg" | "fr" | "en";
 
 export type Theme = "dark" | "light" | "system";
 
-export type ThemeIcon = "moon" | "sunny" | "phone-portrait-outline";
+export type ThemeIcon = "moon-outline" | "sunny" | "phone-portrait-outline";
 
 export type TextAlign = "left" | "center" | "right" | "justify" | "auto";
 

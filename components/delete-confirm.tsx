@@ -14,10 +14,10 @@ export default function DeleteConfirm({ visible, deleteTitle, onClose }: { visib
   }
 
   return (
-    <AppModal visible={visible} onClose={handleClose} closeOnBackdrop={false} position="center">
+    <AppModal visible={visible} onClose={handleClose} closeOnBackdrop={false} color={color?.bg} position="center">
       <View>
         <Text style={[styles.bookTitle, { fontSize: 24, color: color?.text }]}>{deleteTitle || lang.deleteText}</Text>
-        <ThemedText style={{ fontSize: 14, textAlign: "center", marginVertical: 20 }}>
+        <ThemedText style={{ fontSize: 18, textAlign: "center", marginVertical: 20 }}>
           {lang.confirmDeleteText}
         </ThemedText>
         <View style={[styles.flexRow, { justifyContent: "flex-end", gap: 20, padding: 0 }]}>

@@ -117,3 +117,19 @@ export async function deleteAllFavorites(): Promise<void> {
   await db.runAsync('DELETE FROM favorites');
 }
 
+// DELETE PAR LIVRE + CHAPITRE
+export async function deleteFavoritesByChapter(
+  bookNumber: number,
+  chapter: number
+): Promise<void> {
+  const db = await getDB();
+  await db.runAsync(
+    `
+    DELETE FROM favorites
+    WHERE book_number = ?
+      AND chapter = ?
+    `,
+    bookNumber,
+    chapter
+  );
+}

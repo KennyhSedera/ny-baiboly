@@ -117,3 +117,19 @@ export async function deleteAllArchives(): Promise<void> {
   await db.runAsync('DELETE FROM archives');
 }
 
+// DELETE PAR LIVRE + CHAPITRE
+export async function deleteArchivesByChapter(
+  bookNumber: number,
+  chapter: number
+): Promise<void> {
+  const db = await getDB();
+  await db.runAsync(
+    `
+    DELETE FROM archives
+    WHERE book_number = ?
+      AND chapter = ?
+    `,
+    bookNumber,
+    chapter
+  );
+}

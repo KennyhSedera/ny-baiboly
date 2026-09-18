@@ -100,7 +100,7 @@ export default function BookIndex() {
             </View>
           </View>
 
-          <Pressable onPress={() => router.push("/app-search-global")} style={[styles.flexRow, styles.searchInput, { justifyContent: "space-between", width: "100%", borderWidth: 1, borderColor: !isDark ? color?.bg : color?.borderColor, backgroundColor: `${!isDark ? color?.text : color?.bg}60`, paddingVertical: 10 }]}>
+          <Pressable onPress={() => router.push("/app-search-global")} style={[styles.flexRow, styles.searchInput, { justifyContent: "space-between", width: "100%", borderWidth: 1, borderColor: !isDark ? color?.bg : color?.borderColor, backgroundColor: `${!isDark ? color?.text : color?.bg}40`, paddingVertical: 10, borderRadius: 100 }]}>
             <Text style={[styles.searchInputText, { color: !isDark ? color?.bg : color?.text }]}>{language.searchText} ....</Text>
             <Ionicons name="search" size={22} color={!isDark ? color?.bg : color?.text} />
           </Pressable>
@@ -366,7 +366,7 @@ export const styles = StyleSheet.create({
   },
   buttonFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 2, padding: 8, borderRadius: 8, borderColor: '#ccc', marginVertical: 2, borderWidth: 1, borderStyle: "dashed" },
   buttonFooterText: { fontWeight: 'bold', fontSize: 16, },
-  cardColor: { width: '48%', height: 150, borderRadius: 20, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 10, position: 'relative' },
+  cardColor: { width: '48%', height: 150, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 10, position: 'relative' },
 
   contact: { alignItems: "center", justifyContent: "center", width: "32%", borderRadius: 10, padding: 10 },
 
