@@ -27,6 +27,7 @@ export default function NoteInput() {
   const [currentId, setCurrentId] = useState<number>(Number(id) || 0);
   const [charCount, setCharCount] = useState(0);
   const [focused, setFocused] = useState(false);
+  const [inputHeight, setInputHeight] = useState(50);
 
   const [pendingContent, setPendingContent] = useState<string | null>(null);
   const contentInjectedRef = useRef(false);
@@ -167,13 +168,27 @@ export default function NoteInput() {
         </View>
 
         <View style={{ paddingHorizontal: 10, marginVertical: 10 }}>
+
           <TextInput
             placeholder={t.noteTitleText}
             value={title}
             onChangeText={handleChangeTitle}
             placeholderTextColor={`${color?.text}96`}
-            style={[{ backgroundColor: `${color?.bg}60`, paddingHorizontal: 12, height: 50, borderRadius: 10, fontSize: 16, color: color?.text, borderWidth: 1, borderColor: `${color?.text}50`, fontWeight: 'bold' }]}
+            style={[{
+              backgroundColor: `${color?.bg}60`,
+              paddingHorizontal: 12,
+              paddingVertical: 12,
+              minHeight: 50,
+              height: Math.max(50, inputHeight),
+              borderRadius: 10,
+              fontSize: 20,
+              color: color?.text,
+              borderWidth: 1,
+              borderColor: `${color?.text}50`,
+              fontWeight: 'bold',
+            }]}
             multiline
+            onContentSizeChange={(e) => setInputHeight(e.nativeEvent.contentSize.height)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
           />

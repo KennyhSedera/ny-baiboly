@@ -84,6 +84,7 @@ const ScreenBooks = () => {
         renderItem={renderItemFlatlist}
         keyExtractor={(item) => item.book_number.toString()}
         numColumns={2}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom: 90,
           paddingTop: 4,

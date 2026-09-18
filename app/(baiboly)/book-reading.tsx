@@ -4,12 +4,11 @@ import AppModal from '@/components/modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { VerseText } from '@/components/verse-text';
-import { getTranslation } from '@/constants/text';
+import { getInfo, getTranslation } from '@/constants/text';
 import { useApp } from '@/contexts/app.context';
 import { readingVersesBible } from '@/types/bible';
 import { TextAlign } from '@/types/text.type';
 import { getBookById, getPrevAndNextChapter, getVerseBetweenTwoVerseId, getVerseByChapterId } from '@/utils/bible.util';
-import { adjustColor } from '@/utils/color.util';
 import { convertVersesToArrayNumber } from '@/utils/text.util';
 import { Entypo } from '@expo/vector-icons';
 import Feather from '@expo/vector-icons/Feather';
@@ -26,6 +25,7 @@ export default function BookReading() {
   const { bookId, chapterId, startVerse, endVerse, } = useLocalSearchParams();
   const { settingRead, isDark, books, verses, langues, color, notes, updateSettingRead, addNewArchive, addNewFavorite, addNewNoteVerse } = useApp();
   const language = getTranslation(langues?.appLng || "mg");
+  const info = getInfo(langues?.bibleLng || "mg");
   const { prev, next } = getPrevAndNextChapter(Number(bookId), Number(chapterId), books, verses);
   const router = useRouter()
   const book = getBookById(Number(bookId), books);
@@ -256,12 +256,12 @@ export default function BookReading() {
   };
   return (
     <ThemedView style={styles.container}>
-      <View style={[styles.header, { backgroundColor: book?.book_color, borderColor: adjustColor(book?.book_color || "#FFF", -30) }]}>
+      <View style={[styles.header, { backgroundColor: color?.bg, borderColor: color?.text }]}>
         {!onSearch && <View style={styles.flexRow}>
           <Pressable onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="#FFF" />
+            <Ionicons name="chevron-back" size={24} color={color?.text} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: "#FFF" }]}>
+          <Text style={[styles.headerTitle, { color: color?.text }]}>
             {affichage}
           </Text>
         </View>}
@@ -269,7 +269,7 @@ export default function BookReading() {
         {onSearch &&
           <View style={[
             styles.flexRow,
-            { width: onSearch ? '90%' : 'auto', borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: `${adjustColor(book?.book_color || '#e2e2e2', -30)}30`, marginVertical: 4, borderWidth: 1, borderRadius: 20, }
+            { width: onSearch ? '90%' : 'auto', borderColor: `${color?.text}80`, backgroundColor: `${color?.text}10`, marginVertical: 4, borderWidth: 1, borderRadius: 20, }
           ]}
           >
             <TextInput
@@ -284,18 +284,18 @@ export default function BookReading() {
           </View>
         }
         <View style={[styles.flexRow]}>
-          <Pressable
-            onPress={() => { setOnSearch((prev) => !prev); onSearch && setSearch('') }}
-            style={[styles.flexRow, { width: 32, height: 32, justifyContent: 'center', borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: `${adjustColor(book?.book_color || '#e2e2e2', -30)}30`, borderWidth: 1, borderRadius: 20, }]}
-          >
-            <Ionicons name={onSearch ? "close" : "search"} size={20} color="#e9e9e9" />
-          </Pressable>
           {!onSearch && <Pressable
             onPress={() => setModalVisible(true)}
-            style={[styles.flexRow, { width: 32, height: 32, justifyContent: 'center', borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: `${adjustColor(book?.book_color || '#e2e2e2', -30)}30`, borderWidth: 1, borderRadius: 20, }]}
+            style={[styles.flexRow, { width: 32, height: 32, justifyContent: 'center', }]}
           >
-            <Ionicons name={"text-outline"} size={20} color="#e9e9e9" />
+            <Ionicons name={"text"} size={22} color={color?.text} />
           </Pressable>}
+          <Pressable
+            onPress={() => { setOnSearch((prev) => !prev); onSearch && setSearch('') }}
+            style={[styles.flexRow, { width: 32, height: 32, justifyContent: 'center', }]}
+          >
+            <Ionicons name={onSearch ? "close" : "search"} size={24} color={color?.text} />
+          </Pressable>
         </View>
       </View>
 
@@ -307,31 +307,21 @@ export default function BookReading() {
           style={[
             styles.buttonFlotting,
             styles.flexCol,
-            {
-              width: "auto",
-              height: "auto",
-              bottom: 90,
-              right: 10,
-              backgroundColor: `${book?.book_color}ef`,
-              padding: 10,
-              paddingVertical: 15,
-              gap: 12,
-              overflow: "hidden",
-            },
+            { width: "auto", height: "auto", bottom: 90, right: 10, backgroundColor: `${color?.bg}ef`, padding: 10, paddingVertical: 15, gap: 12, overflow: "hidden", },
           ]}
         >
           <Animated.View
             entering={FadeInDown.delay(0).duration(200).springify().damping(15)}
             exiting={FadeOutUp.delay(200).duration(150)}
           >
-            <Ionicons onPress={copyToClipboard} name={copied ? "checkmark" : "copy-outline"} size={22} color={"#fff"} />
+            <Ionicons onPress={copyToClipboard} name={copied ? "checkmark" : "copy-outline"} size={22} color={color?.text} />
           </Animated.View>
 
           <Animated.View
             entering={FadeInDown.delay(50).duration(200).springify().damping(15)}
             exiting={FadeOutUp.delay(150).duration(150)}
           >
-            <Ionicons onPress={handleFavorite} name={favorited ? "checkmark" : "heart"} size={26} color={"#fff"} />
+            <Ionicons onPress={handleFavorite} name={favorited ? "checkmark" : "heart"} size={26} color={color?.text} />
           </Animated.View>
 
           <Animated.View
@@ -339,9 +329,9 @@ export default function BookReading() {
             exiting={FadeOutUp.delay(100).duration(150)}
           >
             {!archived ? (
-              <Entypo onPress={handleArchive} name={"archive"} size={26} color={"#fff"} />
+              <Entypo onPress={handleArchive} name={"archive"} size={26} color={color?.text} />
             ) : (
-              <Ionicons name={"checkmark"} size={26} color={"#fff"} />
+              <Ionicons name={"checkmark"} size={26} color={color?.text} />
             )}
           </Animated.View>
 
@@ -349,14 +339,14 @@ export default function BookReading() {
             entering={FadeInDown.delay(150).duration(200).springify().damping(15)}
             exiting={FadeOutUp.delay(50).duration(150)}
           >
-            <Ionicons onPress={() => setShowNote(true)} name="document-text-outline" size={26} color={"#fff"} />
+            <Ionicons onPress={() => setShowNote(true)} name="document-text-outline" size={26} color={color?.text} />
           </Animated.View>
 
           <Animated.View
             entering={FadeInDown.delay(200).duration(200).springify().damping(15)}
             exiting={FadeOutUp.delay(0).duration(150)}
           >
-            <Ionicons name="close" size={26} color={"#fff"} onPress={() => setSelectedVerse([])} />
+            <Ionicons name="close" size={26} color={color?.text} onPress={() => setSelectedVerse([])} />
           </Animated.View>
         </Animated.View>
       )}
@@ -405,38 +395,41 @@ export default function BookReading() {
         )}
       </ScrollView>
 
-      <View style={[styles.footer, { backgroundColor: book?.book_color, borderColor: adjustColor(book?.book_color || "#FFF", -30) }]}>
-        <Pressable style={[styles.buttonFooter, { borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: `${adjustColor(book?.book_color || '#e2e2e2', -30)}30`, }]} onPress={() => handleBtnFooterPress("prev")}>
-          <Ionicons name="chevron-back" size={16} color="#FFF" />
-          <Text style={[styles.buttonFooterText, { color: '#fff', fontSize: 12 }]}> {prev?.chapter ? prev?.bookName : books[books.length - 1].short_name}. {prev?.chapter ? prev.chapter : 22}  </Text>
+      <View style={[styles.footer, { backgroundColor: color?.bg, borderColor: color?.text, borderWidth: 0, paddingVertical: 15 }]}>
+        <Pressable style={[styles.buttonFooter, { borderColor: color?.text, backgroundColor: `${color?.bg}30`, }]} onPress={() => handleBtnFooterPress("prev")}>
+          <Ionicons name="chevron-back" size={16} color={color?.text} />
+          <Text style={[styles.buttonFooterText, { color: color?.text, fontSize: 12 }]}> {prev?.chapter ? prev?.bookName : books[books.length - 1].short_name}. {prev?.chapter ? prev.chapter : 22}  </Text>
         </Pressable>
-        <Pressable style={[styles.buttonFooter, { borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: `${adjustColor(book?.book_color || '#e2e2e2', -30)}`, padding: 10, paddingHorizontal: 18 }]} onPress={() => handleBtnFooterPress("bible")}>
-          <Text style={[styles.buttonFooterText, { color: '#fff', fontSize: 18 }]}>Ny Baiboly Malagasy</Text>
+        <Pressable style={[styles.buttonFooter, { borderColor: color?.text, backgroundColor: `${color?.text}`, padding: 14, paddingHorizontal: 18, borderStyle: 'solid' }]} onPress={() => handleBtnFooterPress("bible")}>
+          <Text style={[styles.buttonFooterText, { color: color?.bg, fontSize: 16 }]}>{info.appName}</Text>
         </Pressable>
-        <Pressable style={[styles.buttonFooter, { borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: `${adjustColor(book?.book_color || '#e2e2e2', -30)}30`, gap: 2 }]} onPress={() => handleBtnFooterPress("next")}>
-          <Text style={[styles.buttonFooterText, { color: '#fff', fontSize: 12 }]}>  {next?.chapter ? next?.bookName : books[0].short_name}. {next?.chapter ? next.chapter : 1} </Text>
-          <Ionicons name="chevron-forward" size={16} color="#FFF" />
+        <Pressable style={[styles.buttonFooter, { borderColor: color?.text, backgroundColor: `${color?.bg}30`, gap: 2 }]} onPress={() => handleBtnFooterPress("next")}>
+          <Text style={[styles.buttonFooterText, { color: color?.text, fontSize: 12 }]}>  {next?.chapter ? next?.bookName : books[0].short_name}. {next?.chapter ? next.chapter : 1} </Text>
+          <Ionicons name="chevron-forward" size={16} color={color?.text} />
         </Pressable>
       </View>
 
-      <AppModal visible={modalVisible} onClose={() => setModalVisible(false)} color={book?.book_color} position="bottom">
-        <View style={{ paddingHorizontal: 20 }}>
-          <Text style={[styles.headerTitle, { color: "#fff", marginBottom: 10 }]}>{language.settingRead.title}</Text>
+      <AppModal visible={modalVisible} onClose={() => setModalVisible(false)} color={color?.bg} position="bottom">
+        <View style={{ paddingHorizontal: 8 }}>
+          <Text style={[styles.headerTitle, { color: color?.text, marginBottom: 10 }]}>{language.settingRead.title}</Text>
 
-          <Text style={[styles.modalTitle, { color: '#ffffff' }]}>{language.settingRead.fontSize}</Text>
+          <Text style={[styles.modalTitle, { color: color?.text }]}>{language.settingRead.fontSize}</Text>
           <View style={[styles.flexRow, { justifyContent: "space-between", marginBottom: 8 }]}>
-            {[14, 16, 18, 20, 22, 24, 26, 28].map((size) => (
-              <Pressable
-                key={size}
-                onPress={() => editFontSize(size)}
-                style={[{ borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: size === fontSize ? `${adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20)}` : `${adjustColor(book?.book_color || '#e2e2e2', !isDark ? -30 : 20)}30`, padding: size === fontSize ? 10 : 6, borderRadius: 20 }]}
-              >
-                <Text style={[{ color: adjustColor(book?.book_color || '#e2e2e2', isDark ? (size === fontSize ? 30 : -30) : (size === fontSize ? -20 : 20)) }]}>{size}</Text>
-              </Pressable>
-            ))}
+            {[14, 16, 18, 20, 22, 24, 26, 28].map((size) => {
+              const isSelected = size === fontSize;
+              return (
+                <Pressable
+                  key={size}
+                  onPress={() => editFontSize(size)}
+                  style={[{ borderColor: color?.text, backgroundColor: isSelected ? `${color?.text}` : `${color?.text}30`, padding: isSelected ? 10 : 6, paddingHorizontal: isSelected ? 12 : 8, borderRadius: 20 }]}
+                >
+                  <Text style={[{ color: isSelected ? color?.bg : color?.text }]}>{size}</Text>
+                </Pressable>
+              )
+            })}
           </View>
 
-          <Text style={[styles.modalTitle, { color: '#ffffff', marginTop: 15 }]}>{language.settingRead.textAlign}</Text>
+          <Text style={[styles.modalTitle, { color: color?.text, marginTop: 15 }]}>{language.settingRead.textAlign}</Text>
           <View style={[styles.flexRow, { marginBottom: 8, gap: 10 }]}>
             {["left", "center", "justify"].map(p => {
               const isSelected = p === textAlign;
@@ -444,24 +437,24 @@ export default function BookReading() {
                 <Pressable
                   key={p}
                   onPress={() => editTextAlign(p as "left")}
-                  style={[{ borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20), backgroundColor: isSelected ? `${adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20)}` : `${book?.book_color}30`, padding: isSelected ? 10 : 6, borderRadius: 10 }]}
+                  style={[{ borderColor: color?.text, backgroundColor: isSelected ? `${color?.text}` : `${color?.text}30`, padding: isSelected ? 10 : 6, borderRadius: 10 }]}
                 >
-                  <Feather name={`align-${p}` as "bold"} size={30} color={adjustColor(book?.book_color || '#e2e2e2', isDark ? (isSelected ? 30 : -30) : (isSelected ? -20 : 20))} />
+                  <Feather name={`align-${p}` as "bold"} size={30} color={isSelected ? color?.bg : color?.text} />
                 </Pressable>
               )
             })}
           </View>
 
-          <Text style={[styles.modalTitle, { color: '#ffffff', marginTop: 15 }]}>{language.settingRead.header}</Text>
+          <Text style={[styles.modalTitle, { color: color?.text, marginTop: 15 }]}>{language.settingRead.header}</Text>
           <View style={[styles.flexRow, { marginBottom: 8, gap: 10 }]}>
             <Pressable
               onPress={() => editTiteFormat('row')}
               style={[{
-                borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20),
+                borderColor: color?.text,
                 backgroundColor: titeFormat === 'row'
-                  ? adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20)
-                  : `${adjustColor(book?.book_color || '#e2e2e2', !isDark ? -30 : 20)}30`,
-                padding: titeFormat === 'row' ? 10 : 6,
+                  ? color?.text
+                  : `${color?.text}30`,
+                padding: 6,
                 borderRadius: 10,
               }]}
             >
@@ -474,28 +467,27 @@ export default function BookReading() {
                 borderRadius: 20,
                 backgroundColor: titeFormat !== 'row'
                   ? 'transparent'
-                  : adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20),
+                  : color?.text,
               }}>
-                <Text style={{ color: "#fff" }}>{language.settingRead.bible.book}</Text>
+                <Text style={{ color: titeFormat === 'row' ? color?.bg : color?.text }}>{language.settingRead.bible.book}</Text>
                 <View style={{
                   width: 2,
                   height: "100%",
-                  backgroundColor: "#fff",
+                  backgroundColor: titeFormat === 'row' ? color?.bg : color?.text,
                   marginRight: 6,
                   marginLeft: 4,
                 }} />
-                <Text style={{ color: "#fff" }}>{language.settingRead.bible.chapter}</Text>
+                <Text style={{ color: titeFormat === 'row' ? color?.bg : color?.text }}>{language.settingRead.bible.chapter}</Text>
               </View>
             </Pressable>
 
             <Pressable
               onPress={() => editTiteFormat('col')}
               style={[{
-                borderColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20),
+                borderColor: color?.text,
                 backgroundColor: titeFormat === 'col'
-                  ? adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20)
-                  : `${adjustColor(book?.book_color || '#e2e2e2', !isDark ? -30 : 20)}30`,
-                padding: titeFormat === 'col' ? 10 : 6,
+                  ? color?.text : `${color?.text}30`,
+                padding: 6,
                 borderRadius: 10,
               }]}
             >
@@ -507,21 +499,21 @@ export default function BookReading() {
                 paddingHorizontal: 20,
                 borderRadius: 10,
               }}>
-                <Text style={{ color: "#fff" }}>{language.settingRead.bible.book}</Text>
+                <Text style={{ color: titeFormat !== 'row' ? color?.bg : color?.text }}>{language.settingRead.bible.book}</Text>
                 <View style={{
                   width: "100%",
                   height: 2,
                   marginBottom: 6,
                   marginTop: 4,
-                  backgroundColor: "#fff"
+                  backgroundColor: titeFormat !== 'row' ? color?.bg : color?.text
                 }} />
-                <Text style={{ color: "#fff" }}>{language.settingRead.bible.chapter}</Text>
+                <Text style={{ color: titeFormat !== 'row' ? color?.bg : color?.text }}>{language.settingRead.bible.chapter}</Text>
               </View>
             </Pressable>
           </View>
 
-          <Pressable onPress={() => { setModalVisible(false); handleUpdateSetting() }} style={[styles.showAllButton, { backgroundColor: adjustColor(book?.book_color || '#e2e2e2', isDark ? -30 : 20) + "65", borderColor: "#fff", marginBottom: 0 }]}>
-            <Text style={[styles.showAllButtonText, { color: "#fff" }]}>{language.settingRead.buttonText}</Text>
+          <Pressable onPress={() => { setModalVisible(false); handleUpdateSetting() }} style={[styles.showAllButton, { backgroundColor: color?.text, borderColor: color?.text, borderStyle: "solid", marginBottom: 0, borderRadius: 50 }]}>
+            <Text style={[styles.showAllButtonText, { color: color?.bg }]}>{language.settingRead.buttonText}</Text>
           </Pressable>
         </View>
       </AppModal>

@@ -234,7 +234,7 @@ export default function BookIndex() {
 
       {/* PRAYER */}
       <View style={[styles.flexCol, { alignItems: 'flex-start', marginBottom: 10 }]}>
-        <View style={{ borderRadius: 20, backgroundColor: isDark ? '#ffffff11' : '#00000011', paddingVertical: 12, paddingHorizontal: 18, position: "relative", overflow: "hidden" }}>
+        <View style={{ borderRadius: 20, backgroundColor: isDark ? '#ffffff0f' : '#0000000f', paddingVertical: 12, paddingHorizontal: 18, position: "relative", overflow: "hidden" }}>
           <MaterialCommunityIcons name="hands-pray" size={30} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, right: 10 }} />
           <MaterialCommunityIcons name="hands-pray" size={30} color={`${color?.text}a0`} style={{ position: "absolute", bottom: 10, left: 10 }} />
           <View style={[styles.flexCol,]}>
@@ -250,34 +250,34 @@ export default function BookIndex() {
       <View style={[styles.flexRow, { justifyContent: "space-between", alignItems: "flex-start", width: "100%", gap: "2%" }]}>
 
         {archive && archive.length > 0 && archiveItem && (
-          <Pressable onPress={() => router.push(`/verse-archived`)} style={[styles.bookCard, { backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, borderColor: `${color?.borderColor}40`, alignItems: "flex-start", position: "relative", padding: 8, }]}
+          <Pressable onPress={() => router.push(`/verse-archived`)} style={[styles.bookCard, { backgroundColor: `${isDark ? stats[0].darkBg : stats[0].lightBg}${isDark ? '90' : "40"}`, borderColor: `${isDark ? stats[0].darkText : stats[0].lightText}40`, alignItems: "flex-start", position: "relative", padding: 8, }]}
           >
-            <Text style={[styles.bookTitle, { color: color?.text, fontSize: 16, marginBottom: 8 }]}>{getBookById(archiveItem.book_number, books)?.long_name} {archiveItem.chapter} </Text>
+            <Text style={[styles.bookTitle, { color: isDark ? stats[0].darkText : stats[0].lightText, fontSize: 16, marginBottom: 8 }]}>{getBookById(archiveItem.book_number, books)?.long_name} {archiveItem.chapter} </Text>
             <Text style={[styles.modalText, { color: color?.text }]} numberOfLines={10}>{
               archive
                 .map((v) => (
-                  <VerseText onPress={() => router.push(`/verse-archived`)} text={v.text as string} verseNumber={v.verse} color={color?.text} key={v.verse} textAlign="auto" size={12} />
+                  <VerseText onPress={() => router.push(`/verse-archived`)} text={v.text as string} verseNumber={v.verse} color={isDark ? stats[0].darkText : stats[0].lightText} key={v.verse} textAlign="auto" size={12} />
                 ))
             }</Text>
-            <Text style={[styles.date, { color: color?.text, marginTop: 12, textAlign: "left", fontSize: 10, width: "100%" }]}>{capitalizeText(formatDateHeure(new Date(archiveItem.created_at as string)))}</Text>
+            <Text style={[styles.date, { color: isDark ? stats[0].darkText : stats[0].lightText, marginTop: 12, textAlign: "left", fontSize: 10, width: "100%" }]}>{capitalizeText(formatDateHeure(new Date(archiveItem.created_at as string)))}</Text>
 
-            <Entypo name="archive" size={20} color={color?.text} style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 6, borderRadius: 20 }} />
+            <Entypo name="archive" size={20} color={isDark ? stats[0].darkText : stats[0].lightText} style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 6, borderRadius: 20 }} />
           </Pressable>
         )}
 
         {favorite && favorite.length > 0 && favoriteItem && (
-          <Pressable onPress={() => router.push(`/verse-favoris`)} style={[styles.bookCard, { backgroundColor: `${color?.bg}${isDark ? '90' : "40"}`, borderColor: `${color?.borderColor}40`, alignItems: "flex-start", position: "relative", padding: 8 }]}
+          <Pressable onPress={() => router.push(`/verse-favoris`)} style={[styles.bookCard, { backgroundColor: `${isDark ? stats[1].darkBg : stats[1].lightBg}${isDark ? '90' : "40"}`, borderColor: `${isDark ? stats[1].darkText : stats[1].lightText}40`, alignItems: "flex-start", position: "relative", padding: 8 }]}
           >
-            <Text style={[styles.bookTitle, { color: color?.text, fontSize: 16, marginBottom: 8 }]}>{getBookById(favoriteItem.book_number, books)?.long_name} {favoriteItem.chapter} </Text>
-            <Text style={[styles.modalText, { color: color?.text }]} numberOfLines={10}>{
+            <Text style={[styles.bookTitle, { color: isDark ? stats[1].darkText : stats[1].lightText, fontSize: 16, marginBottom: 8 }]}>{getBookById(favoriteItem.book_number, books)?.long_name} {favoriteItem.chapter} </Text>
+            <Text style={[styles.modalText, { color: isDark ? stats[1].darkText : stats[1].lightText }]} numberOfLines={10}>{
               favorite
                 .map((v) => (
-                  <VerseText onPress={() => router.push(`/verse-favoris`)} text={v.text as string} verseNumber={v.verse} color={color?.text} key={v.verse} textAlign="auto" size={12} />
+                  <VerseText onPress={() => router.push(`/verse-favoris`)} text={v.text as string} verseNumber={v.verse} color={isDark ? stats[1].darkText : stats[1].lightText} key={v.verse} textAlign="auto" size={12} />
                 ))
             }</Text>
-            <Text style={[styles.date, { color: color?.text, marginTop: 12, textAlign: "left", fontSize: 10, width: "100%" }]}>{capitalizeText(formatDateHeure(new Date(favoriteItem.created_at as string)))}</Text>
+            <Text style={[styles.date, { color: isDark ? stats[1].darkText : stats[1].lightText, marginTop: 12, textAlign: "left", fontSize: 10, width: "100%" }]}>{capitalizeText(formatDateHeure(new Date(favoriteItem.created_at as string)))}</Text>
 
-            <Ionicons name="heart" size={20} color={"#cc0000"} style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 6, borderRadius: 20 }} />
+            <Ionicons name="heart" size={20} color={isDark ? stats[1].darkText : stats[1].lightText} style={{ position: "absolute", top: 0, right: 0, zIndex: 1, padding: 6, borderRadius: 20 }} />
           </Pressable>
         )}
 

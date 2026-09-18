@@ -38,13 +38,9 @@ const NoteViewer = () => {
 
   useFocusEffect(useCallback(() => { fetchNote(); }, []),);
 
-  async function getVerseNote() {
-    if (id) { await getNoteVerses(Number(id)); }
-  }
+  async function getVerseNote() { if (id) return getNoteVerses(Number(id)); }
 
-  useEffect(() => {
-    getVerseNote();
-  }, [id]);
+  useEffect(() => { getVerseNote(); }, [id]);
 
   function fetchVerseNote() {
     if (noteVerses) {
@@ -63,13 +59,9 @@ const NoteViewer = () => {
     }
   }
 
-  useEffect(() => {
-    fetchVerseNote()
-  }, [noteVerses]);
+  useEffect(() => { fetchVerseNote() }, [noteVerses]);
 
-  function handleClose() {
-    setOpen(false);
-  }
+  function handleClose() { setOpen(false); }
 
   async function deleteNote(reason: string) {
     if (reason === 'cancel') return handleClose();
@@ -93,13 +85,14 @@ const NoteViewer = () => {
 
   return (
     <ThemedView style={[styles.container, { position: 'relative' }]}>
-      <View
-        style={[styles.header, { backgroundColor: color?.bg, justifyContent: 'flex-start', gap: 12 }]}
-      >
+      <View style={[styles.header, { backgroundColor: color?.bg, justifyContent: 'flex-start', alignItems: 'center', gap: 12, paddingTop: 35 }]} >
         <Ionicons onPress={() => router.back()} name="chevron-back" size={26} color={color?.text} />
-        <Text style={[styles.headerTitle, { textAlign: "left", color: color?.text, fontWeight: '400', fontSize: 16 }]}>
-          {capitalizeText(formatDateHeure(data?.created_at || new Date()))}
-        </Text>
+        <View style={[styles.flexCol, { alignItems: 'flex-start', width: '80%', gap: 1 }]}>
+          <Text numberOfLines={1} style={[styles.headerTitle, { textAlign: "left", color: color?.text, fontWeight: '400', fontSize: 18, width: '100%', marginVertical: 0 }]}>
+            {data?.title || t.noteTitleText}
+          </Text>
+          <Text style={{ color: `${color?.text}af`, fontSize: 10 }}>{capitalizeText(formatDateHeure(data?.created_at || new Date()))}</Text>
+        </View>
       </View>
 
       <ScrollView
@@ -107,7 +100,7 @@ const NoteViewer = () => {
         contentContainerStyle={[styles.scrollContent, {}]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.bookTitle, { color: color?.text, marginBottom: 20, fontSize: 24, textAlign: 'left' }]}>{data?.title || 'Pas de titre'}</Text>
+        <Text style={[styles.bookTitle, { color: color?.text, marginBottom: 20, fontSize: 22, textAlign: 'left' }]}>{data?.title || 'Pas de titre'}</Text>
 
         <View style={[styles.flexRow, { marginBottom: 20, gap: 4, flexWrap: 'wrap' }]}>
           {verseText.map((verse, index) => {

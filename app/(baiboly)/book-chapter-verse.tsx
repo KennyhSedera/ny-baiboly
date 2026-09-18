@@ -2,7 +2,6 @@ import { ThemedView } from '@/components/themed-view';
 import { getTranslation } from '@/constants/text';
 import { useApp } from '@/contexts/app.context';
 import { getBookById, getVerseNumberByChapterId, } from '@/utils/bible.util';
-import { adjustColor } from '@/utils/color.util';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -17,7 +16,7 @@ interface Selected {
 const BookChapterVerse = () => {
   const { bookId, chapterId } = useLocalSearchParams();
   const router = useRouter();
-  const { isDark, books, verses, langues, addNewLastRead } = useApp();
+  const { isDark, books, verses, langues, color, addNewLastRead } = useApp();
 
   const langText = getTranslation(langues?.bibleLng as 'mg')
 
@@ -77,22 +76,22 @@ const BookChapterVerse = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <View style={[styles.header, { backgroundColor: book?.book_color, borderColor: adjustColor(book?.book_color || "#FFF", -30) },]} >
+      <View style={[styles.header, { backgroundColor: color?.bg, borderColor: color?.text },]} >
         <View style={styles.flexRow}>
           <Pressable onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="#FFF" />
+            <Ionicons name="chevron-back" size={24} color={color?.text} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: '#FFF', },]} >
+          <Text style={[styles.headerTitle, { color: color?.text, },]} >
             {book?.long_name} {chapterId}
           </Text>
         </View>
       </View>
 
-      <Pressable onPress={() => hanleRead()} style={[styles.button, { backgroundColor: `${book?.book_color}30`, borderColor: book?.book_color, marginHorizontal: 10 }]}>
-        <Text style={[styles.headerTitle, { color: book?.book_color, fontWeight: '600', fontSize: 16, }]}>
+      <Pressable onPress={() => hanleRead()} style={[styles.button, { backgroundColor: `${color?.bg}30`, borderColor: color?.bg, marginHorizontal: 10 }]}>
+        <Text style={[styles.headerTitle, { color: color?.text, fontWeight: '600', fontSize: 16, }]}>
           {textTitle}
         </Text>
-        <Text style={[styles.headerTitle, { color: book?.book_color, fontWeight: '500', fontSize: 14 }]}> {langText.buttonRead} </Text>
+        <Text style={[styles.headerTitle, { color: color?.text, fontWeight: '500', fontSize: 14 }]}> {langText.buttonRead} </Text>
       </Pressable>
 
       <ScrollView
@@ -109,14 +108,14 @@ const BookChapterVerse = () => {
               onPress={() => handlePress(verse)}
               style={[
                 styles.bookCard,
-                { width: '19%', backgroundColor: selectedVerse ? `${book?.book_color}40` : 'transparent', },
-                selectedVerse && { borderColor: book?.book_color },
+                { width: '19%', backgroundColor: selectedVerse ? `${book?.book_color}` : `${book?.book_color}30`, },
+                { borderColor: selectedVerse ? book?.book_color : `${book?.book_color}30` },
               ]}
             >
               <Text
                 style={[
                   styles.bookTitle,
-                  { color: selectedVerse ? book?.book_color : isDark ? "#fff" : "#000", },
+                  { color: selectedVerse ? '#fff' : `${book?.book_color}`, },
                 ]}
               >
                 {verse}
